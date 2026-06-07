@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Theory Strategies — Complete Encyclopedia</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --surface: #ede8dc;
+  --card: #ffffff;
+  --border: #d4cdbf;
+  --accent: #c0392b;
+  --accent2: #2c3e50;
+  --accent3: #27ae60;
+  --accent4: #e67e22;
+  --accent5: #8e44ad;
+  --text: #1a1612;
+  --text-dim: #6b6155;
+  --mono: 'JetBrains Mono', monospace;
+  --serif: 'Crimson Pro', Georgia, serif;
+  --sans: 'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 300;
+  line-height: 1.75;
+  min-height: 100vh;
+}
+
+/* ── SIDEBAR ── */
+.layout { display: flex; min-height: 100vh; }
+
+aside {
+  width: 280px; flex-shrink: 0;
+  background: var(--accent2);
+  position: fixed; top: 0; left: 0; bottom: 0;
+  overflow-y: auto; z-index: 50;
+  padding: 0 0 2rem;
+}
+aside::-webkit-scrollbar { width: 4px; }
+aside::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+.sidebar-header {
+  padding: 1.8rem 1.5rem 1.2rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 0.5rem;
+}
+.sidebar-header .logo {
+  font-family: var(--serif); font-size: 1.25rem; font-weight: 700;
+  color: #fff; line-height: 1.2; margin-bottom: 0.4rem;
+}
+.sidebar-header .sub {
+  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.18em;
+  color: rgba(255,255,255,0.35); text-transform: uppercase;
+}
+
+.nav-group-label {
+  font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.3); text-transform: uppercase;
+  padding: 1rem 1.5rem 0.3rem;
+}
+.nav-link {
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.5rem 1.5rem; cursor: pointer;
+  font-size: 0.82rem; color: rgba(255,255,255,0.55);
+  transition: all 0.18s; border-left: 2px solid transparent;
+  text-decoration: none;
+}
+.nav-link:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-link.active { color: #fff; border-left-color: var(--accent); background: rgba(192,57,43,0.15); }
+.nav-link .num { font-family: var(--mono); font-size: 0.62rem; color: rgba(255,255,255,0.25); width: 18px; }
+
+/* ── MAIN ── */
+.content { margin-left: 280px; max-width: 860px; padding: 4rem 3rem 6rem; }
+
+/* ── HERO ── */
+.hero {
+  margin-bottom: 4rem; padding-bottom: 3rem;
+  border-bottom: 2px solid var(--border);
+}
+.hero .eyebrow {
+  font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.22em;
+  color: var(--accent); text-transform: uppercase; margin-bottom: 1rem;
+}
+.hero h1 {
+  font-family: var(--serif); font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 700; line-height: 1.1; margin-bottom: 1.2rem;
+  color: var(--text);
+}
+.hero h1 em { color: var(--accent); font-style: italic; }
+.hero p { font-size: 1.05rem; color: var(--text-dim); max-width: 560px; }
+.hero-stats { display: flex; gap: 2.5rem; margin-top: 2rem; flex-wrap: wrap; }
+.stat { }
+.stat .val { font-family: var(--serif); font-size: 2rem; font-weight: 700; color: var(--accent2); line-height: 1; }
+.stat .lbl { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; }
+
+/* ── STRATEGY SECTION ── */
+.strategy {
+  margin-bottom: 5rem; padding-top: 1rem;
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.5s, transform 0.5s;
+}
+.strategy.visible { opacity: 1; transform: none; }
+
+.strategy-header { display: flex; align-items: flex-start; gap: 1.2rem; margin-bottom: 1.5rem; }
+.strategy-num {
+  font-family: var(--mono); font-size: 0.65rem; color: var(--accent);
+  background: rgba(192,57,43,0.08); border: 1px solid rgba(192,57,43,0.2);
+  padding: 0.3rem 0.6rem; border-radius: 3px; flex-shrink: 0; margin-top: 0.4rem;
+}
+.strategy h2 {
+  font-family: var(--serif); font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700; line-height: 1.15; color: var(--text);
+}
+.strategy h2 .tag {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 400;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px;
+  margin-left: 0.6rem; vertical-align: middle; position: relative; top: -3px;
+}
+.tag-pure { background: rgba(39,174,96,0.12); color: var(--accent3); }
+.tag-mixed { background: rgba(142,68,173,0.12); color: var(--accent5); }
+.tag-iterated { background: rgba(230,126,34,0.12); color: var(--accent4); }
+.tag-dominant { background: rgba(192,57,43,0.1); color: var(--accent); }
+.tag-sequential { background: rgba(44,62,80,0.1); color: var(--accent2); }
+.tag-behavioral { background: rgba(41,128,185,0.1); color: #2980b9; }
+.tag-cooperative { background: rgba(22,160,133,0.1); color: #16a085; }
+
+.lead {
+  font-family: var(--serif); font-size: 1.15rem; font-style: italic;
+  color: var(--text-dim); margin-bottom: 1.5rem; line-height: 1.6;
+  border-left: 3px solid var(--border); padding-left: 1rem;
+}
+
+.body-text { font-size: 0.95rem; color: var(--text); margin-bottom: 1rem; line-height: 1.8; }
+.body-text strong { color: var(--accent2); font-weight: 500; }
+
+/* ── BOXES ── */
+.box {
+  border-radius: 4px; padding: 1.2rem 1.5rem; margin: 1.5rem 0;
+}
+.box-def { background: var(--surface); border: 1px solid var(--border); }
+.box-when { background: rgba(39,174,96,0.06); border: 1px solid rgba(39,174,96,0.2); }
+.box-why { background: rgba(230,126,34,0.06); border: 1px solid rgba(230,126,34,0.2); }
+.box-warn { background: rgba(192,57,43,0.05); border: 1px solid rgba(192,57,43,0.2); }
+.box-example { background: rgba(44,62,80,0.05); border: 1px solid rgba(44,62,80,0.15); }
+
+.box-label {
+  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.2em;
+  text-transform: uppercase; margin-bottom: 0.6rem; font-weight: 500;
+}
+.box-def .box-label { color: var(--text-dim); }
+.box-when .box-label { color: var(--accent3); }
+.box-why .box-label { color: var(--accent4); }
+.box-warn .box-label { color: var(--accent); }
+.box-example .box-label { color: var(--accent2); }
+
+.box p { font-size: 0.88rem; margin: 0; line-height: 1.75; }
+.box p + p { margin-top: 0.6rem; }
+
+/* ── MATRIX ── */
+.matrix-wrap { overflow-x: auto; margin: 1.5rem 0; }
+.matrix-caption { font-family: var(--mono); font-size: 0.62rem; color: var(--text-dim); margin-bottom: 0.6rem; letter-spacing: 0.1em; }
+table.mx { border-collapse: collapse; font-family: var(--mono); font-size: 0.82rem; }
+table.mx th, table.mx td { border: 1px solid var(--border); padding: 0.6rem 1rem; text-align: center; }
+table.mx th { background: var(--surface); color: var(--text-dim); font-weight: 400; font-size: 0.7rem; letter-spacing: 0.08em; }
+table.mx .row-h { background: var(--surface); color: var(--accent2); font-weight: 500; }
+table.mx td.hi-nash { background: rgba(39,174,96,0.1); color: var(--accent3); font-weight: 500; }
+table.mx td.hi-dom { background: rgba(192,57,43,0.08); }
+table.mx td.hi-focal { background: rgba(230,126,34,0.1); color: var(--accent4); font-weight: 500; }
+
+/* ── SCENARIOS ── */
+.scenarios { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.8rem; margin: 1.2rem 0; }
+.scenario { background: var(--card); border: 1px solid var(--border); padding: 1rem; border-radius: 4px; }
+.scenario .s-icon { font-size: 1.3rem; margin-bottom: 0.4rem; }
+.scenario h4 { font-family: var(--serif); font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem; }
+.scenario p { font-size: 0.78rem; color: var(--text-dim); margin: 0; }
+
+/* ── THREE-COLS ── */
+.three-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin: 1.2rem 0; }
+.col-card { background: var(--card); border: 1px solid var(--border); padding: 1rem; border-radius: 4px; }
+.col-card .col-label { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.4rem; }
+.col-card p { font-size: 0.8rem; color: var(--text-dim); margin: 0; }
+
+/* ── DIVIDER ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 0 0 5rem; }
+
+/* ── INTERACTIVE ── */
+.interactive {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 4px; padding: 1.5rem; margin: 1.5rem 0;
+}
+.interactive h4 { font-family: var(--serif); font-size: 1.1rem; margin-bottom: 0.3rem; }
+.interactive p.idesc { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 1.2rem; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1rem; }
+.ibtn {
+  font-family: var(--mono); font-size: 0.72rem; padding: 0.45rem 1rem;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text-dim); cursor: pointer; border-radius: 3px; transition: all 0.18s;
+}
+.ibtn:hover { border-color: var(--accent2); color: var(--accent2); }
+.ibtn.active { border-color: var(--accent); background: rgba(192,57,43,0.08); color: var(--accent); }
+.output {
+  font-family: var(--mono); font-size: 0.78rem; background: var(--surface);
+  border: 1px solid var(--border); padding: 1rem; border-radius: 3px;
+  min-height: 60px; white-space: pre-wrap; line-height: 1.9; color: var(--text-dim);
+}
+.run-btn {
+  font-family: var(--mono); font-size: 0.72rem; background: var(--accent2);
+  color: #fff; border: none; padding: 0.5rem 1.4rem; cursor: pointer;
+  border-radius: 3px; font-weight: 500; transition: opacity 0.18s; margin-bottom: 0.8rem;
+}
+.run-btn:hover { opacity: 0.85; }
+
+/* ── QUICK REF TABLE ── */
+.qref { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 1.5rem 0; }
+.qref th { background: var(--accent2); color: #fff; padding: 0.6rem 0.9rem; text-align: left; font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em; font-weight: 400; }
+.qref td { padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.qref tr:nth-child(even) td { background: var(--surface); }
+.qref td:first-child { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); font-weight: 500; }
+.qref td:last-child { color: var(--text-dim); font-style: italic; }
+
+/* ── TOC LABEL ── */
+.toc-section { font-family: var(--serif); font-size: 1.6rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text); }
+
+/* ── PROGRESS ── */
+.progress { position: fixed; top: 0; left: 280px; right: 0; height: 2px; background: var(--border); z-index: 100; }
+.progress-fill { height: 100%; background: var(--accent); width: 0; transition: width 0.2s; }
+
+/* ── MOBILE ── */
+.hamburger { display: none; position: fixed; top: 1rem; right: 1rem; z-index: 200; background: var(--accent2); color: #fff; border: none; padding: 0.5rem 0.8rem; font-size: 1.1rem; cursor: pointer; border-radius: 3px; }
+
+@media (max-width: 768px) {
+  aside { transform: translateX(-100%); transition: transform 0.3s; }
+  aside.open { transform: none; }
+  .content { margin-left: 0; padding: 4rem 1.2rem 4rem; }
+  .progress { left: 0; }
+  .hamburger { display: block; }
+  .three-cols { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<button class="hamburger" onclick="toggleMenu()">☰</button>
+<div class="progress"><div class="progress-fill" id="pbar"></div></div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">Game Theory<br>Strategies</div>
+    <div class="sub">Complete Encyclopedia</div>
+  </div>
+
+  <div class="nav-group-label">Fundamentals</div>
+  <a class="nav-link active" href="#s1"><span class="num">01</span> Pure Strategy</a>
+  <a class="nav-link" href="#s2"><span class="num">02</span> Mixed Strategy</a>
+  <a class="nav-link" href="#s3"><span class="num">03</span> Dominant Strategy</a>
+  <a class="nav-link" href="#s4"><span class="num">04</span> Dominated Strategy & IEDS</a>
+
+  <div class="nav-group-label">Equilibrium-Based</div>
+  <a class="nav-link" href="#s5"><span class="num">05</span> Nash Equilibrium Strategy</a>
+  <a class="nav-link" href="#s6"><span class="num">06</span> Minimax / Maximin</a>
+  <a class="nav-link" href="#s7"><span class="num">07</span> Subgame Perfect Strategy</a>
+
+  <div class="nav-group-label">Iterated & Repeated</div>
+  <a class="nav-link" href="#s8"><span class="num">08</span> Tit-for-Tat</a>
+  <a class="nav-link" href="#s9"><span class="num">09</span> Grim Trigger</a>
+  <a class="nav-link" href="#s10"><span class="num">10</span> Win-Stay, Lose-Shift</a>
+  <a class="nav-link" href="#s11"><span class="num">11</span> Tit-for-Two-Tats</a>
+
+  <div class="nav-group-label">Advanced</div>
+  <a class="nav-link" href="#s12"><span class="num">12</span> Backward Induction</a>
+  <a class="nav-link" href="#s13"><span class="num">13</span> Forward Induction</a>
+  <a class="nav-link" href="#s14"><span class="num">14</span> Focal Point Strategy</a>
+  <a class="nav-link" href="#s15"><span class="num">15</span> Correlated Equilibrium</a>
+  <a class="nav-link" href="#s16"><span class="num">16</span> Commitment & Threats</a>
+  <a class="nav-link" href="#s17"><span class="num">17</span> Signaling Strategy</a>
+  <a class="nav-link" href="#s18"><span class="num">18</span> Screening Strategy</a>
+  <a class="nav-link" href="#s19"><span class="num">19</span> Evolutionary Strategy (ESS)</a>
+
+  <div class="nav-group-label">Reference</div>
+  <a class="nav-link" href="#quickref"><span class="num">★</span> Quick Reference</a>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="eyebrow">Game Theory · Strategy Encyclopedia</div>
+    <h1>Every Strategy,<br><em>Fully Explained</em></h1>
+    <p>19 strategies from the ground up — what each one is, when to use it, why it works, and real examples from economics, politics, biology, and war.</p>
+    <div class="hero-stats">
+      <div class="stat"><div class="val">19</div><div class="lbl">Strategies</div></div>
+      <div class="stat"><div class="val">7</div><div class="lbl">Categories</div></div>
+      <div class="stat"><div class="val">50+</div><div class="lbl">Real Examples</div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- S1: PURE STRATEGY -->
+  <!-- ══════════════════════════════════════════════ -->
+  <section class="strategy" id="s1">
+    <div class="strategy-header">
+      <div class="strategy-num">01</div>
+      <h2>Pure Strategy <span class="tag tag-pure">Pure</span></h2>
+    </div>
+    <p class="lead">"I will always do exactly this — no randomness, no second-guessing."</p>
+    <p class="body-text">A <strong>pure strategy</strong> is the simplest form of strategic choice: you pick one specific action and commit to it with certainty (probability = 1). No coin flips, no randomization. Every time the same situation arises, you do the same thing.</p>
+    <p class="body-text">In formal notation, if your strategy set is S = {A, B, C}, a pure strategy assigns probability 1 to exactly one element — e.g., "always play A."</p>
+
+    <div class="box box-def">
+      <div class="box-label">Definition</div>
+      <p>A pure strategy is a complete, deterministic plan of action that specifies exactly one choice for every possible situation a player might encounter in a game.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ When a pure-strategy Nash Equilibrium exists — your best response is clear and fixed.<br>
+      ✔ When your opponent cannot exploit your predictability (e.g., you have a dominant strategy).<br>
+      ✔ In coordination games where consistency is more valuable than unpredictability.<br>
+      ✔ In sequential games where commitment to a pure strategy is itself a signal of resolve.</p>
+    </div>
+
+    <div class="box box-why">
+      <div class="box-label">Why It Works</div>
+      <p>Pure strategies are simple and credible. They're easy to commit to and easy for others to observe and model. When a pure strategy is a best response to whatever the other player does, it's also a Nash Equilibrium — and deviating from it only hurts you.</p>
+    </div>
+
+    <div class="box box-warn">
+      <div class="box-label">When It Fails</div>
+      <p>In zero-sum or competitive games without a dominant strategy, a pure strategy is exploitable. If your opponent knows you'll always play "Rock," they'll always play "Paper." The existence of a pure strategy NE is not guaranteed — only mixed-strategy NE is guaranteed (Nash, 1950).</p>
+    </div>
+
+    <div class="matrix-wrap">
+      <div class="matrix-caption">Battle of the Sexes — Two Pure Strategy Nash Equilibria</div>
+      <table class="mx">
+        <thead><tr><th></th><th>B: Opera</th><th>B: Football</th></tr></thead>
+        <tbody>
+          <tr><td class="row-h">A: Opera</td><td class="hi-nash">(2, 1) ★</td><td>(0, 0)</td></tr>
+          <tr><td class="row-h">A: Football</td><td>(0, 0)</td><td class="hi-nash">(1, 2) ★</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="scenarios">
+      <div class="scenario"><div class="s-icon">♟️</div><h4>Chess</h4><p>Pure strategies dominate — every move is deterministic. The entire game tree is pure strategies.</p></div>
+      <div class="scenario"><div class="s-icon">🤝</div><h4>Coordination</h4><p>Driving on the left or right: once a convention is set, pure strategy (follow the convention) is optimal.</p></div>
+      <div class="scenario"><div class="s-icon">🏭</div><h4>Market Entry</h4><p>A firm decides: Enter or Stay Out. If entry is dominant, it uses that pure strategy every time.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S2: MIXED STRATEGY -->
+  <section class="strategy" id="s2">
+    <div class="strategy-header">
+      <div class="strategy-num">02</div>
+      <h2>Mixed Strategy <span class="tag tag-mixed">Mixed</span></h2>
+    </div>
+    <p class="lead">"I randomize my choices with calculated probabilities, so you can never predict me."</p>
+    <p class="body-text">A <strong>mixed strategy</strong> assigns a probability distribution over all available pure strategies. Instead of always playing A, you play A with probability p and B with probability (1−p). The key insight: you choose the probabilities strategically, not randomly.</p>
+    <p class="body-text">In the unique mixed-strategy Nash Equilibrium, your chosen probabilities must make your opponent <em>indifferent</em> between their strategies — so they have no reason to exploit you.</p>
+
+    <div class="box box-def">
+      <div class="box-label">Definition</div>
+      <p>A mixed strategy σᵢ is a probability distribution over player i's pure strategy set Sᵢ. If Sᵢ = {A, B, C}, then σᵢ = (p, q, 1−p−q) where p, q ≥ 0 and p+q ≤ 1.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ When no pure-strategy Nash Equilibrium exists (zero-sum games, matching pennies, RPS).<br>
+      ✔ In any competitive situation where predictability is dangerous.<br>
+      ✔ When you need to keep opponents uncertain — penalty kicks, poker, military tactics.<br>
+      ✔ When your game has a "hide-and-seek" structure (inspector vs. evader, predator vs. prey).</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">Worked Example — Penalty Kicks</div>
+      <p>Kicker: go Left or Right. Goalkeeper: dive Left or Right. Each pure strategy is exploitable. The Nash Equilibrium is mixed: kicker goes Left 60%, Right 40%; goalkeeper mirrors those probabilities. <strong>Neither can do better by changing probabilities alone.</strong> Real FIFA data confirms professional players approximate these equilibrium probabilities remarkably well.</p>
+    </div>
+
+    <div class="matrix-wrap">
+      <div class="matrix-caption">Matching Pennies — Only Mixed Strategy NE exists</div>
+      <table class="mx">
+        <thead><tr><th></th><th>B: Heads</th><th>B: Tails</th></tr></thead>
+        <tbody>
+          <tr><td class="row-h">A: Heads</td><td>(+1, −1)</td><td>(−1, +1)</td></tr>
+          <tr><td class="row-h">A: Tails</td><td>(−1, +1)</td><td>(+1, −1)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="body-text" style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-dim)">NE: Both mix 50/50. Any pure strategy is strictly beaten by the opponent's best response.</p>
+
+    <div class="interactive">
+      <h4>⚽ Mixed Strategy Calculator — Penalty Kicks</h4>
+      <p class="idesc">Adjust the kicker's probability of going Left. See if the goalkeeper can exploit it.</p>
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
+        <label style="font-family:var(--mono);font-size:0.75rem;color:var(--text-dim)">Kicker: P(Left) = <strong id="prob-val">0.50</strong></label>
+        <input type="range" min="0" max="100" value="50" id="prob-slider" oninput="calcMixed(this.value)" style="width:200px">
+      </div>
+      <div class="output" id="mixed-out">Move the slider to see payoffs...</div>
+    </div>
+
+    <div class="scenarios">
+      <div class="scenario"><div class="s-icon">🃏</div><h4>Poker</h4><p>Bluffing is mixed strategy. If you never bluff, opponents fold only strong hands. If you always bluff, they always call. Optimal bluff frequency keeps them indifferent.</p></div>
+      <div class="scenario"><div class="s-icon">🎯</div><h4>Military</h4><p>Patrol routes randomized — predictable patrol patterns are exploited by adversaries.</p></div>
+      <div class="scenario"><div class="s-icon">🔍</div><h4>Tax Audits</h4><p>Governments audit a fraction of taxpayers. The audit probability is set to make evasion exactly not worthwhile.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S3: DOMINANT STRATEGY -->
+  <section class="strategy" id="s3">
+    <div class="strategy-header">
+      <div class="strategy-num">03</div>
+      <h2>Dominant Strategy <span class="tag tag-dominant">Dominant</span></h2>
+    </div>
+    <p class="lead">"No matter what you do, this is always my best option."</p>
+    <p class="body-text">A <strong>dominant strategy</strong> is one that gives a player a higher payoff than any other strategy, regardless of what any other player does. It requires no guessing about opponents — the answer is always the same.</p>
+    <p class="body-text"><strong>Strictly dominant:</strong> always strictly better (higher payoff) than alternatives. <strong>Weakly dominant:</strong> at least as good as alternatives in all cases, and strictly better in at least one.</p>
+
+    <div class="box box-def">
+      <div class="box-label">Definition</div>
+      <p>Strategy sᵢ strictly dominates s'ᵢ if: uᵢ(sᵢ, s₋ᵢ) > uᵢ(s'ᵢ, s₋ᵢ) for ALL strategy profiles s₋ᵢ of opponents. A rational player will always choose their dominant strategy if one exists.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ When one option is clearly better in all circumstances — the analysis is trivial, use that strategy.<br>
+      ✔ Use as the first step in solving any game: check for dominant strategies before anything else.<br>
+      ✔ In mechanism design: design games so that telling the truth / cooperating is dominant (e.g., Vickrey auctions).</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">The Classic Example — Prisoner's Dilemma</div>
+      <p>Defect is the dominant strategy for both prisoners. Whether the other stays silent or betrays, you always do better by betraying. This is why the Prisoner's Dilemma is so powerful — rational dominance leads to mutual harm.</p>
+    </div>
+
+    <div class="matrix-wrap">
+      <div class="matrix-caption">Prisoner's Dilemma — Defect dominates Cooperate for both players</div>
+      <table class="mx">
+        <thead><tr><th></th><th>B: Cooperate</th><th>B: Defect</th></tr></thead>
+        <tbody>
+          <tr><td class="row-h">A: Cooperate</td><td>(3,3)</td><td>(0,5)</td></tr>
+          <tr><td class="row-h">A: Defect</td><td class="hi-dom">(5,0)</td><td class="hi-nash">(1,1)★</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="body-text" style="font-size:0.85rem;color:var(--text-dim)">If B Cooperates: A gets 5 > 3 by Defecting. If B Defects: A gets 1 > 0 by Defecting. Defect wins both ways.</p>
+
+    <div class="scenarios">
+      <div class="scenario"><div class="s-icon">💰</div><h4>Vickrey Auction</h4><p>Bidding your true value is a dominant strategy. Bidding lower risks losing; bidding higher risks overpaying.</p></div>
+      <div class="scenario"><div class="s-icon">🌍</div><h4>Arms Races</h4><p>For each nation: "Arm" dominates "Disarm" — regardless of what the other does. Result: both arm and are less secure.</p></div>
+      <div class="scenario"><div class="s-icon">📺</div><h4>Advertising</h4><p>In duopoly: advertising often dominates not advertising, producing an advertising equilibrium that wastes resources.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S4: IEDS -->
+  <section class="strategy" id="s4">
+    <div class="strategy-header">
+      <div class="strategy-num">04</div>
+      <h2>Dominated Strategy & IEDS <span class="tag tag-dominant">Elimination</span></h2>
+    </div>
+    <p class="lead">"Rational players never choose dominated options. So we can erase them — and keep erasing."</p>
+    <p class="body-text"><strong>Iterated Elimination of Dominated Strategies (IEDS)</strong> is a systematic method to simplify and sometimes fully solve games. If a strategy is dominated (always worse than another), a rational player would never choose it. Remove it. Now the game is smaller. Check again. Repeat until you can't eliminate anymore.</p>
+
+    <div class="box box-def">
+      <div class="box-label">The Procedure</div>
+      <p>1. Find any strictly dominated strategy for any player.<br>
+      2. Remove it from the game (rational players never play it).<br>
+      3. Re-examine the reduced game — new dominated strategies may now appear.<br>
+      4. Repeat until no more eliminations are possible.<br>
+      5. If one outcome remains: it's the unique rationalized solution.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ Before computing Nash Equilibria — IEDS simplifies the game first.<br>
+      ✔ When common knowledge of rationality is reasonable (e.g., professional markets, academic game theory).<br>
+      ✔ In "p-beauty contest" style games where thinking about thinking matters.<br>
+      ✗ Weak dominance elimination can be order-dependent — be cautious.</p>
+    </div>
+
+    <div class="matrix-wrap">
+      <div class="matrix-caption">IEDS Example — Step by step elimination</div>
+      <table class="mx">
+        <thead><tr><th></th><th>B: Left</th><th>B: Center</th><th>B: Right</th></tr></thead>
+        <tbody>
+          <tr><td class="row-h">A: Top</td><td>(4,3)</td><td>(2,1)</td><td class="hi-dom">(3,0)</td></tr>
+          <tr><td class="row-h">A: Middle</td><td>(1,2)</td><td>(4,3)</td><td class="hi-dom">(2,1)</td></tr>
+          <tr><td class="row-h">A: Bottom</td><td>(2,4)</td><td>(3,2)</td><td class="hi-dom">(1,3)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="body-text" style="font-size:0.85rem;color:var(--text-dim)">Step 1: "Right" is dominated for B by "Center" or "Left" — eliminate it. Step 2: now with only Left/Center, more eliminations may follow, solving down to one outcome.</p>
+
+    <div class="box box-example">
+      <div class="box-label">Real World — p-Beauty Contest</div>
+      <p>Players guess a number 0–100. Winner is closest to (2/3) × average. Guess 67 if others guess 100. But if others also apply this logic, guess 44. Then 29. Then 19... IEDS converges to 0. Experiments show humans do 2–3 rounds of elimination, not infinite — revealing bounded rationality.</p>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S5: NASH EQUILIBRIUM STRATEGY -->
+  <section class="strategy" id="s5">
+    <div class="strategy-header">
+      <div class="strategy-num">05</div>
+      <h2>Nash Equilibrium Strategy <span class="tag tag-pure">Equilibrium</span></h2>
+    </div>
+    <p class="lead">"I am playing my best response to you, and you are playing your best response to me. Neither of us wants to move."</p>
+    <p class="body-text">A <strong>Nash Equilibrium strategy</strong> is the strategy each player plays as part of a Nash Equilibrium — a stable state where no unilateral deviation benefits any player. It is the central solution concept of non-cooperative game theory.</p>
+
+    <div class="box box-def">
+      <div class="box-label">Best Response Method</div>
+      <p>To find NE: For each of Player 2's strategies, find Player 1's best response. For each of Player 1's strategies, find Player 2's best response. Where both players are simultaneously at their best responses → Nash Equilibrium.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ As the primary solution concept for any simultaneous, non-cooperative game.<br>
+      ✔ When you want a stable prediction: what will rational players converge to?<br>
+      ✔ Multiple NE may exist — select with focal points, payoff dominance, or risk dominance.<br>
+      ✗ NE doesn't always predict actual behavior — humans often deviate from theoretical NE.</p>
+    </div>
+
+    <div class="box box-why">
+      <div class="box-label">Why It Matters</div>
+      <p>Nash's 1950 theorem guarantees every finite game has at least one Nash Equilibrium (in mixed strategies). This means stable outcomes always exist — even in the most complex multi-player games. NE is the baseline prediction for virtually all of economics, political science, and strategic biology.</p>
+    </div>
+
+    <div class="three-cols">
+      <div class="col-card"><div class="col-label" style="color:var(--accent3)">Stable</div><p>No player benefits from unilateral deviation. Once reached, players stay.</p></div>
+      <div class="col-card"><div class="col-label" style="color:var(--accent4)">Not Always Optimal</div><p>NE can be collectively bad (Prisoner's Dilemma: mutual defection is NE but both prefer cooperation).</p></div>
+      <div class="col-card"><div class="col-label" style="color:var(--accent5)">May Not Be Unique</div><p>Multiple NE can exist. The "equilibrium selection problem" is still actively debated.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S6: MINIMAX / MAXIMIN -->
+  <section class="strategy" id="s6">
+    <div class="strategy-header">
+      <div class="strategy-num">06</div>
+      <h2>Minimax / Maximin Strategy <span class="tag tag-sequential">Zero-Sum</span></h2>
+    </div>
+    <p class="lead">"Assume the worst. Choose the option where the worst outcome is best."</p>
+    <p class="body-text">In <strong>zero-sum games</strong> (one player's gain = other's loss), each player uses minimax/maximin reasoning. <strong>Maximin</strong> (used by the maximizer): choose the strategy that maximizes your minimum possible payoff. <strong>Minimax</strong> (used by the minimizer): choose to minimize the maximum payoff your opponent can gain.</p>
+    <p class="body-text">Von Neumann's 1928 <strong>Minimax Theorem</strong> proved these converge to the same value — guaranteeing an optimal solution for any finite zero-sum game.</p>
+
+    <div class="box box-def">
+      <div class="box-label">Von Neumann's Minimax Theorem</div>
+      <p>For every finite two-player zero-sum game:<br>
+      max[P1] min[P2] u(s₁,s₂)  =  min[P2] max[P1] u(s₁,s₂)<br><br>
+      Both sides equal the "value of the game" — the guaranteed payoff achievable by optimal mixed strategies.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ Strictly competitive zero-sum games (poker, tennis, military conflict).<br>
+      ✔ When you must guarantee a floor — you can't trust the opponent to be cooperative.<br>
+      ✔ As a conservative decision rule under uncertainty ("worst-case optimization").<br>
+      ✔ In AI: game-playing algorithms (chess engines, checkers) use minimax with alpha-beta pruning.</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">Chess AI Example</div>
+      <p>A chess engine assumes the opponent will always make their best move (minimax). It evaluates all its possible moves, picks the one that leads to the best position assuming optimal opponent play. Deep Blue's minimax search defeated Kasparov in 1997.</p>
+    </div>
+
+    <div class="scenarios">
+      <div class="scenario"><div class="s-icon">♟️</div><h4>Chess Engines</h4><p>Minimax with alpha-beta pruning. Looks N moves ahead, assumes opponent plays perfectly.</p></div>
+      <div class="scenario"><div class="s-icon">⚔️</div><h4>Military Planning</h4><p>Plan for the enemy's best response to your strategy, not their average or worst response.</p></div>
+      <div class="scenario"><div class="s-icon">📉</div><h4>Risk Management</h4><p>"Worst-case scenario" planning in finance is maximin — maximize the minimum acceptable outcome.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S7: SUBGAME PERFECT -->
+  <section class="strategy" id="s7">
+    <div class="strategy-header">
+      <div class="strategy-num">07</div>
+      <h2>Subgame Perfect Strategy <span class="tag tag-sequential">Sequential</span></h2>
+    </div>
+    <p class="lead">"My threats and promises are credible — because I would actually follow through on them."</p>
+    <p class="body-text">In sequential (dynamic) games, some Nash Equilibria rely on <em>incredible threats</em> — threats that would never rationally be carried out if the situation actually arose. <strong>Subgame Perfect Equilibrium (SPE)</strong> rules these out. A strategy profile is subgame perfect if it constitutes a Nash Equilibrium in every subgame of the original game.</p>
+    <p class="body-text">The solution method is <strong>backward induction</strong>: solve from the last decision point backward to the first.</p>
+
+    <div class="box box-def">
+      <div class="box-label">Definition</div>
+      <p>A Subgame Perfect Equilibrium is a strategy profile that induces a Nash Equilibrium in every subgame — including subgames that are never reached in equilibrium. It eliminates non-credible threats.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ Any sequential game (bargaining, ultimatum, market entry deterrence, negotiation).<br>
+      ✔ When you want to know if a threat is credible — i.e., would it actually be carried out?<br>
+      ✔ Entry deterrence: incumbents threaten "price war if you enter" — is this credible? SPE tells you.<br>
+      ✔ Contract design: will parties actually honor terms when the time comes?</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">Ultimatum Game — SPE vs. Actual Behavior</div>
+      <p>Proposer splits $10 with Responder. SPE predicts: Proposer offers $0.01, Responder accepts (any positive sum beats zero). <strong>But in experiments</strong>, proposers offer ~$4–5 and responders reject "unfair" offers below ~$2–3. SPE is logically correct but fails to account for fairness preferences — a key limitation.</p>
+    </div>
+
+    <div class="scenarios">
+      <div class="scenario"><div class="s-icon">💼</div><h4>Market Entry</h4><p>Incumbent threatens to flood the market if a rival enters. SPE: if it's unprofitable to fight, the threat is not credible — enter anyway.</p></div>
+      <div class="scenario"><div class="s-icon">🏦</div><h4>Debt Negotiation</h4><p>SPE determines what a borrower will actually offer and a lender will actually accept when the game is played out — not just announced.</p></div>
+      <div class="scenario"><div class="s-icon">☢️</div><h4>Nuclear Deterrence</h4><p>MAD is credible only if retaliation is automatic. If a leader could rationally choose not to retaliate after an attack (everyone's dead), the threat is non-credible — hence "dead man's switch" protocols.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S8: TIT-FOR-TAT -->
+  <section class="strategy" id="s8">
+    <div class="strategy-header">
+      <div class="strategy-num">08</div>
+      <h2>Tit-for-Tat <span class="tag tag-iterated">Iterated</span></h2>
+    </div>
+    <p class="lead">"I cooperate first. Then I mirror whatever you did last round — exactly once."</p>
+    <p class="body-text"><strong>Tit-for-Tat (TFT)</strong> is the most celebrated strategy in repeated game theory. Proposed by Anatol Rapoport, it won Robert Axelrod's famous 1980 computer tournaments for the Iterated Prisoner's Dilemma — beating far more complex strategies.</p>
+    <p class="body-text">Its four defining properties: <strong>Nice</strong> (never first to defect), <strong>Retaliatory</strong> (punishes defection immediately), <strong>Forgiving</strong> (returns to cooperation after one retaliation), <strong>Clear</strong> (simple and predictable).</p>
+
+    <div class="box box-def">
+      <div class="box-label">Algorithm</div>
+      <p>Round 1: Cooperate.<br>
+      Round n > 1: Do exactly what your opponent did in round n−1.<br>
+      If they Cooperated → Cooperate. If they Defected → Defect.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ Long-term repeated interactions with the same player (business partnerships, international relations).<br>
+      ✔ When defection is observable (you can see exactly what the other did).<br>
+      ✔ When the future matters — a long shadow of the future keeps TFT stable.<br>
+      ✔ When you want a simple, robust, and respected strategy signal.</p>
+    </div>
+
+    <div class="box box-warn">
+      <div class="box-label">Weakness — Echo Effect</div>
+      <p>If communication is noisy (misread a cooperation as defection), TFT can lock into mutual defection spirals. One accidental defection triggers retaliation, which triggers retaliation, indefinitely. Solution: Tit-for-Two-Tats (see Strategy 11) or Generous TFT (occasionally forgive unprovoked).</p>
+    </div>
+
+    <div class="interactive">
+      <h4>🔁 TFT Simulator — 8 Rounds</h4>
+      <p class="idesc">You play against a Tit-for-Tat opponent. Choose your move each round.</p>
+      <div id="tft-ui">
+        <div style="font-family:var(--mono);font-size:0.75rem;color:var(--text-dim);margin-bottom:0.8rem">Round <span id="tft-round">1</span> of 8 — Opponent plays: <strong id="opp-move" style="color:var(--accent)">waiting...</strong></div>
+        <div class="btn-row">
+          <button class="ibtn" onclick="tftPlay('C')">🤝 Cooperate</button>
+          <button class="ibtn" onclick="tftPlay('D')">🗡️ Defect</button>
+        </div>
+      </div>
+      <div class="output" id="tft-out">Make your first move above. Opponent starts by cooperating.</div>
+      <button class="run-btn" style="margin-top:0.8rem" onclick="resetTFT()">↺ Reset</button>
+    </div>
+
+    <div class="scenarios">
+      <div class="scenario"><div class="s-icon">🌐</div><h4>International Trade</h4><p>Countries reciprocate tariffs: you raise tariffs, I raise tariffs. TFT explains trade war escalation and de-escalation.</p></div>
+      <div class="scenario"><div class="s-icon">🐦</div><h4>Biology</h4><p>Stickleback fish approach predators in pairs using TFT — if your partner retreats, you retreat; if they advance, you advance.</p></div>
+      <div class="scenario"><div class="s-icon">💼</div><h4>Business</h4><p>Long-term supplier relationships: match quality and reliability with what you receive. Defect once and trust is lost — so partners stay honest.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S9: GRIM TRIGGER -->
+  <section class="strategy" id="s9">
+    <div class="strategy-header">
+      <div class="strategy-num">09</div>
+      <h2>Grim Trigger <span class="tag tag-iterated">Iterated</span></h2>
+    </div>
+    <p class="lead">"Cooperate until you betray me once — then I defect forever. No second chances."</p>
+    <p class="body-text"><strong>Grim Trigger</strong> is the most severe punishment strategy in repeated games. It creates the strongest possible incentive for cooperation — because defection triggers permanent, unforgiving retaliation. The threat is maximally harsh.</p>
+
+    <div class="box box-def">
+      <div class="box-label">Algorithm</div>
+      <p>Round 1: Cooperate.<br>
+      Continue Cooperating until the opponent ever Defects.<br>
+      If opponent ever Defects: Defect in ALL future rounds, forever — no exceptions.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ When you need the strongest deterrent — the threat of permanent punishment keeps cooperation stable.<br>
+      ✔ In the Folk Theorem: Grim Trigger can sustain cooperative outcomes when the discount factor δ is above a threshold (players are patient enough).<br>
+      ✔ High-stakes, long-horizon relationships where one defection is catastrophic.<br>
+      ✗ Fragile to mistakes — a single miscommunication triggers permanent war.</p>
+    </div>
+
+    <div class="box box-why">
+      <div class="box-label">The Math — Why It Works</div>
+      <p>Cooperating forever gives payoff: 3/(1−δ) per period (using PD payoffs).<br>
+      Defecting once gives: 5 now + 1/(1−δ) forever after (stuck in mutual defection).<br>
+      Grim Trigger sustains cooperation when: δ ≥ 1/2. Meaning: if you value the future at least half as much as the present, Grim Trigger makes cooperation rational.</p>
+    </div>
+
+    <div class="scenarios">
+      <div class="scenario"><div class="s-icon">🏪</div><h4>Cartel Agreements</h4><p>OPEC: if one country cheats on quotas (overproduces), all others flood the market permanently. The threat keeps members in line.</p></div>
+      <div class="scenario"><div class="s-icon">⚖️</div><h4>Legal Contracts</h4><p>Breach of contract triggers permanent reputation destruction in tight-knit industries — the legal equivalent of Grim Trigger.</p></div>
+      <div class="scenario"><div class="s-icon">🤝</div><h4>Personal Relationships</h4><p>"If you cheat once, we're done forever." A Grim Trigger commitment that may deter cheating — if credible.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S10: WIN-STAY LOSE-SHIFT -->
+  <section class="strategy" id="s10">
+    <div class="strategy-header">
+      <div class="strategy-num">10</div>
+      <h2>Win-Stay, Lose-Shift (Pavlov) <span class="tag tag-iterated">Iterated</span></h2>
+    </div>
+    <p class="lead">"If the last outcome was good for me — repeat it. If it was bad — switch."</p>
+    <p class="body-text"><strong>Win-Stay, Lose-Shift (WSLS)</strong>, also called "Pavlov," is a reactive strategy based on personal outcomes, not opponent's actions. It outperforms Tit-for-Tat in noisy environments and can re-establish cooperation after accidental defections.</p>
+
+    <div class="box box-def">
+      <div class="box-label">Algorithm</div>
+      <p>If your last payoff was "good" (you cooperated and both cooperated, OR you defected and they cooperated): → Repeat your last action.<br>
+      If your last payoff was "bad" (you cooperated but they defected, OR both defected): → Switch your action.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ Noisy environments where accidental defection is possible — WSLS can recover cooperation.<br>
+      ✔ When you're interacting with unconditional cooperators (WSLS will exploit them, unlike TFT).<br>
+      ✔ Evolutionary models show WSLS is highly stable and common in biological systems.<br>
+      ✔ Simpler decision rule — useful when tracking opponent history is hard.</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">Why It Beats TFT in Noise</div>
+      <p>Suppose both use TFT and an accidental defection occurs. TFT locks into alternating defect-cooperate spirals. WSLS: after mutual defection (bad outcome) → both switch to cooperate → mutual cooperation resumes. WSLS is self-correcting; TFT is not.</p>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S11: TFT2 -->
+  <section class="strategy" id="s11">
+    <div class="strategy-header">
+      <div class="strategy-num">11</div>
+      <h2>Tit-for-Two-Tats <span class="tag tag-iterated">Iterated</span></h2>
+    </div>
+    <p class="lead">"I forgive one defection. Only two consecutive defections will make me retaliate."</p>
+    <p class="body-text"><strong>Tit-for-Two-Tats (TF2T)</strong> is a more forgiving variant of TFT. It only retaliates after seeing the opponent defect twice in a row — making it robust to noisy signals and accidental mistakes.</p>
+
+    <div class="box box-def">
+      <div class="box-label">Algorithm</div>
+      <p>Cooperate unless the opponent defected in BOTH of the last two rounds. One isolated defection is forgiven and treated as noise.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ High-noise environments (miscommunication is common).<br>
+      ✔ When you want to avoid mutually destructive retaliation cycles.<br>
+      ✗ Exploitable by alternating cooperate-defect patterns (player defects every other round, gets forgiven each time).</p>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S12: BACKWARD INDUCTION -->
+  <section class="strategy" id="s12">
+    <div class="strategy-header">
+      <div class="strategy-num">12</div>
+      <h2>Backward Induction <span class="tag tag-sequential">Sequential</span></h2>
+    </div>
+    <p class="lead">"Start at the end. What would a rational player do last? Work backward to find what to do first."</p>
+    <p class="body-text"><strong>Backward induction</strong> is the primary method for solving sequential (extensive-form) games. You start at the terminal nodes (end of the game tree), determine what a rational player would do there, then fold that decision backward through the tree to the beginning.</p>
+
+    <div class="box box-def">
+      <div class="box-label">The Method</div>
+      <p>1. Identify all terminal nodes (end game states) and their payoffs.<br>
+      2. At the last decision node: find the rational choice (highest payoff for that player).<br>
+      3. Replace that node with its expected payoff, move one step back.<br>
+      4. Repeat until you reach the initial decision node — that's the solution.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ Any sequential game with a finite horizon (clear end point).<br>
+      ✔ When moves are sequential and observable (each player sees previous moves).<br>
+      ✔ Deriving subgame perfect equilibria — backward induction IS the method.<br>
+      ✗ Fails in infinite-horizon games (no last node). ✗ Paradoxes arise in games like "Chain Store" where backward induction yields counterintuitive results.</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">Centipede Game Paradox</div>
+      <p>Two players alternate choosing: "Continue" (pot grows) or "Take" (grab the money). Backward induction says: Player 1 takes immediately at round 1 (since by backward induction, both will eventually take anyway). But experiments show players continue for many rounds — humans don't apply full backward induction, revealing bounded rationality or social preferences.</p>
+    </div>
+
+    <div class="scenarios">
+      <div class="scenario"><div class="s-icon">🤝</div><h4>Ultimatum Bargaining</h4><p>Backward induction: proposer offers the minimum the responder will accept. Responder accepts anything > 0.</p></div>
+      <div class="scenario"><div class="s-icon">♟️</div><h4>Chess</h4><p>In principle, backward induction solves chess completely (it's finite). In practice, the tree is too large — computers use heuristics.</p></div>
+      <div class="scenario"><div class="s-icon">💼</div><h4>Negotiation</h4><p>Knowing how a negotiation ends (deadline, outside options) lets you work backward to the optimal opening offer.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S13: FORWARD INDUCTION -->
+  <section class="strategy" id="s13">
+    <div class="strategy-header">
+      <div class="strategy-num">13</div>
+      <h2>Forward Induction <span class="tag tag-sequential">Sequential</span></h2>
+    </div>
+    <p class="lead">"What does the fact that you made this move tell me about what you intend to do next?"</p>
+    <p class="body-text"><strong>Forward induction</strong> is the opposite of backward induction. Instead of starting at the end, it starts at the beginning: players use observations of past play to infer future intentions. If a player took an action that only makes sense under certain plans, opponents update their beliefs accordingly.</p>
+
+    <div class="box box-def">
+      <div class="box-label">Core Idea</div>
+      <p>If a player makes a "surprising" move (deviating from what backward induction predicts), rational opponents should not treat it as a mistake. Instead, they infer: "What plan would make this move rational?" and update expectations based on that plan.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ When early actions communicate private information about future intentions.<br>
+      ✔ In signaling games and reputation-building contexts.<br>
+      ✔ "Burning money" demonstrations — doing something costly signals how strongly you feel about future play.<br>
+      ✔ Labor markets: accepting a low-paying job signals willingness to work hard (forward induction into future promotions).</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">Battle of the Sexes — Forward Induction</div>
+      <p>If Player A publicly commits $500 to opera tickets before the game begins (a costly action only rational if she plans to go to Opera), Player B should infer she's committed to Opera. Forward induction selects the Opera equilibrium — the costly action eliminates the Football equilibrium.</p>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S14: FOCAL POINT -->
+  <section class="strategy" id="s14">
+    <div class="strategy-header">
+      <div class="strategy-num">14</div>
+      <h2>Focal Point Strategy (Schelling) <span class="tag tag-behavioral">Behavioral</span></h2>
+    </div>
+    <p class="lead">"When there's no communication, we both converge on the 'obvious' answer — the one that stands out."</p>
+    <p class="body-text">Proposed by Thomas Schelling (Nobel 2005), a <strong>focal point</strong> (or "Schelling point") is an equilibrium that players naturally converge on without communication, because it has some salient or prominent quality. It's not derived from payoffs alone — it's sociologically and psychologically salient.</p>
+
+    <div class="box box-def">
+      <div class="box-label">Definition</div>
+      <p>A focal point is an equilibrium selection principle. When multiple Nash Equilibria exist and players cannot communicate, they coordinate on whichever equilibrium has special salience — historical, cultural, geometric, or contextual.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ Pure coordination games where communication is impossible.<br>
+      ✔ Predicting which of multiple Nash Equilibria players will actually select.<br>
+      ✔ Designing standards, conventions, and platforms — make your standard the focal point.<br>
+      ✔ Emergency meeting points, default legal rules, market price anchoring.</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">Schelling's Classic Experiments</div>
+      <p>"If you had to meet a stranger in New York City tomorrow, with no prior arrangement, where and when would you go?" Most Americans said: Grand Central Terminal, noon. Neither is specified anywhere — it's just obvious. The "obvious" choice is the focal point. Similarly: "pick a number from 1 to 10" → most pick 7. "Divide 100" → most split 50/50.</p>
+    </div>
+
+    <div class="matrix-wrap">
+      <div class="matrix-caption">Coordination Game — Both focal point choices are Nash Equilibria</div>
+      <table class="mx">
+        <thead><tr><th></th><th>B: Meet at A</th><th>B: Meet at B</th></tr></thead>
+        <tbody>
+          <tr><td class="row-h">A: Meet at A</td><td class="hi-focal">(1,1) ← Focal</td><td>(0,0)</td></tr>
+          <tr><td class="row-h">A: Meet at B</td><td>(0,0)</td><td class="hi-nash">(1,1)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="scenarios">
+      <div class="scenario"><div class="s-icon">💻</div><h4>Tech Standards</h4><p>QWERTY keyboard, USB-C, TCP/IP — became focal points through early adoption. Competitors lost even with superior tech.</p></div>
+      <div class="scenario"><div class="s-icon">⚖️</div><h4>Legal Defaults</h4><p>Default rules in contracts serve as focal points — what parties expect when they haven't specified a term.</p></div>
+      <div class="scenario"><div class="s-icon">💰</div><h4>Price Anchoring</h4><p>$9.99, $100, $1000 — round numbers are focal. Salary negotiations anchor to the first number stated.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S15: CORRELATED EQUILIBRIUM -->
+  <section class="strategy" id="s15">
+    <div class="strategy-header">
+      <div class="strategy-num">15</div>
+      <h2>Correlated Equilibrium Strategy <span class="tag tag-cooperative">Cooperative</span></h2>
+    </div>
+    <p class="lead">"We follow a shared signal. Following it is in everyone's interest — even if we can't coordinate directly."</p>
+    <p class="body-text">Proposed by Robert Aumann (Nobel 2005), a <strong>Correlated Equilibrium</strong> generalizes Nash Equilibrium. Players observe a public or private signal from a "correlating device" (a mediator, traffic light, coin flip) and choose strategies based on it. The key: no player can benefit by deviating from the recommended strategy, given the signal structure.</p>
+
+    <div class="box box-def">
+      <div class="box-label">Definition</div>
+      <p>A probability distribution σ over strategy profiles is a Correlated Equilibrium if no player can gain by deviating from the recommended strategy, conditional on their own signal. Every Nash Equilibrium is a correlated equilibrium, but not vice versa — CE is a larger, more general set.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ When a mediator or common randomizing device is available (traffic lights, arbitrators).<br>
+      ✔ CE can achieve outcomes Nash Equilibrium cannot — sometimes more efficient.<br>
+      ✔ Computationally: CE can be found in polynomial time (NE is PPAD-complete).<br>
+      ✔ Multi-agent AI systems: CE is increasingly used as the solution concept for algorithmic game theory.</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">Traffic Light — Perfect Correlated Equilibrium</div>
+      <p>Two cars at an intersection. Possible Nash Equilibria: both stop (bad), both go (crash), one goes one stops. A traffic light creates a correlated equilibrium: "Go on green, stop on red." Following the signal is rational for both — deviating leads to a crash. The light achieves an efficient outcome neither driver would reach without coordination.</p>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S16: COMMITMENT & THREATS -->
+  <section class="strategy" id="s16">
+    <div class="strategy-header">
+      <div class="strategy-num">16</div>
+      <h2>Commitment & Threats Strategy <span class="tag tag-sequential">Sequential</span></h2>
+    </div>
+    <p class="lead">"By visibly tying my own hands, I change what you will do — and we both end up better off."</p>
+    <p class="body-text"><strong>Commitment strategies</strong> involve actions that restrict your own future choices in order to influence opponent behavior. By credibly committing to a course of action, you change the game's strategic structure. The paradox: <em>less flexibility can mean more power.</em></p>
+    <p class="body-text">Thomas Schelling: "The power to constrain an adversary may depend on the power to bind oneself."</p>
+
+    <div class="box box-def">
+      <div class="box-label">Types of Commitment Devices</div>
+      <p><strong>Burning bridges:</strong> eliminate your own retreat option — credibly signals you'll fight.<br>
+      <strong>Contracts:</strong> legally bind yourself to a course of action.<br>
+      <strong>Reputation:</strong> past behavior makes future behavior credible.<br>
+      <strong>Sunk costs:</strong> investments that make exit costly signal long-term commitment.<br>
+      <strong>Delegation:</strong> hand authority to someone with extreme preferences (e.g., a "madman" negotiator).</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ First-mover advantage: commit early to force opponents into a disadvantaged position.<br>
+      ✔ Deterrence: credibly threaten retaliation to prevent attacks/entry.<br>
+      ✔ Bargaining: commit to a maximum price to prevent sellers from demanding more.<br>
+      ✔ Self-control: commit in advance to avoid temptation (Odysseus and the sirens).</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">Cortés Burns His Ships (1519)</div>
+      <p>Hernán Cortés landed in Mexico and ordered his ships burned. His troops now had no option to retreat — they had to conquer or die. This commitment device changed his soldiers' incentives (no exit → fight harder) AND signaled total commitment to potential allies and enemies. Classic commitment strategy: eliminate your own options to strengthen your position.</p>
+    </div>
+
+    <div class="scenarios">
+      <div class="scenario"><div class="s-icon">🏗️</div><h4>Capacity Investment</h4><p>Building a giant factory before competitors enter signals: "I will flood this market — entering won't be profitable for you."</p></div>
+      <div class="scenario"><div class="s-icon">🗣️</div><h4>Negotiation</h4><p>"My hands are tied — my board won't approve more than X." Commitment to a limit strengthens your bargaining position.</p></div>
+      <div class="scenario"><div class="s-icon">💳</div><h4>Financial Commitment</h4><p>Taking on debt commits a company to aggressive performance — it cannot afford to be timid when interest payments are due.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S17: SIGNALING -->
+  <section class="strategy" id="s17">
+    <div class="strategy-header">
+      <div class="strategy-num">17</div>
+      <h2>Signaling Strategy <span class="tag tag-behavioral">Incomplete Info</span></h2>
+    </div>
+    <p class="lead">"I take a costly action to credibly reveal private information you can't directly observe."</p>
+    <p class="body-text">In games of <strong>incomplete information</strong>, one player has private information (their "type") that others can't see. <strong>Signaling</strong> is a strategy where the informed player takes a costly action that credibly reveals their type — because imitating it would be too expensive for other types.</p>
+    <p class="body-text">Michael Spence's 1973 model of education as a signal (Nobel 2001) is the defining example.</p>
+
+    <div class="box box-def">
+      <div class="box-label">The Logic — Costly Signaling</div>
+      <p>A signal is credible only if it is <strong>too costly for low types to mimic</strong>. If anyone could send it cheaply, it reveals nothing. The equilibrium condition: high types find it worth sending the signal; low types find it unprofitable. This is called a <strong>Separating Equilibrium</strong>.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ When you have private information that others would benefit from knowing.<br>
+      ✔ When cheap talk (just saying "I'm high quality") is not credible.<br>
+      ✔ Job markets, financial markets, mating (peacock's tail), charity donations.<br>
+      ✔ Whenever the cost of the signal varies by type — so only one type rationally sends it.</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">Spence's Education Model</div>
+      <p>High-ability workers get a degree cheaply (lower effort cost). Low-ability workers find it too hard/expensive. Firms pay graduates more — not because university taught anything useful, but because the degree signals high ability. The signal works because it's <em>differentially costly</em>. Implication: even if education has zero productivity effect, it can persist as a pure signal.</p>
+    </div>
+
+    <div class="scenarios">
+      <div class="scenario"><div class="s-icon">🦚</div><h4>Peacock's Tail</h4><p>Costly, burdensome, predator-attracting. Signals genetic quality: "I'm so fit I can survive this handicap."</p></div>
+      <div class="scenario"><div class="s-icon">💎</div><h4>Luxury Goods</h4><p>Expensive Rolex signals wealth — the cost itself is the signal. Fake Rolexes reduce signal value.</p></div>
+      <div class="scenario"><div class="s-icon">💸</div><h4>Philanthropy</h4><p>Large public donations signal wealth and values. The publicity requirement is part of the signal.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S18: SCREENING -->
+  <section class="strategy" id="s18">
+    <div class="strategy-header">
+      <div class="strategy-num">18</div>
+      <h2>Screening Strategy <span class="tag tag-behavioral">Incomplete Info</span></h2>
+    </div>
+    <p class="lead">"I design a menu of options so that different types reveal themselves by what they choose."</p>
+    <p class="body-text"><strong>Screening</strong> is the mirror image of signaling. Here the <em>uninformed</em> party designs a mechanism — a menu of contracts or choices — that induces the informed party to self-select and reveal their type through their choices. The informed party chooses what's best for them, and in doing so, reveals who they are.</p>
+
+    <div class="box box-def">
+      <div class="box-label">The Mechanism Design Approach</div>
+      <p>Offer a menu: Option A suits high types. Option B suits low types. Design them so each type voluntarily chooses the option intended for them (incentive compatibility) and each type prefers participating to not (individual rationality). Types reveal themselves through choice.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ Insurance markets: offer high-deductible/low-premium vs. low-deductible/high-premium — healthy people choose high deductible, revealing their type.<br>
+      ✔ Price discrimination: airlines offer business vs. economy class — business travelers self-select.<br>
+      ✔ Hiring: design work trials or tests that only talented candidates find worthwhile to complete.<br>
+      ✔ Tax design: marginal tax brackets screen income levels.</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">Airline Pricing — Classic Screening</div>
+      <p>Business travelers need flexibility (last-minute changes) and have high willingness to pay. Leisure travelers book early and have lower WTP. Airlines offer: refundable, changeable tickets at high prices vs. non-refundable, advance-purchase at low prices. Each type self-selects the appropriate option — the airline never needs to verify which type you are. Your choice reveals it.</p>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- S19: ESS -->
+  <section class="strategy" id="s19">
+    <div class="strategy-header">
+      <div class="strategy-num">19</div>
+      <h2>Evolutionary Stable Strategy (ESS) <span class="tag tag-behavioral">Evolutionary</span></h2>
+    </div>
+    <p class="lead">"This strategy, once dominant in a population, cannot be invaded by any mutant strategy."</p>
+    <p class="body-text">Developed by John Maynard Smith and George Price (1973), an <strong>Evolutionarily Stable Strategy (ESS)</strong> is a strategy that, if adopted by most members of a population, cannot be successfully invaded by a rare mutant with a different strategy. It is the evolutionary analogue of Nash Equilibrium — but requires no rational agents.</p>
+    <p class="body-text">ESS applies to biology, sociology, cultural evolution, and any setting where strategies reproduce/spread based on success rather than deliberate choice.</p>
+
+    <div class="box box-def">
+      <div class="box-label">Definition</div>
+      <p>Strategy s* is an ESS if for any alternative strategy s:<br>
+      1. u(s*, s*) > u(s, s*) — s* does better against itself than any mutant, OR<br>
+      2. u(s*, s*) = u(s, s*) AND u(s*, s) > u(s, s) — if tied against itself, s* beats the mutant when meeting mutants.</p>
+    </div>
+
+    <div class="box box-when">
+      <div class="box-label">When to Use</div>
+      <p>✔ Evolutionary biology — explaining animal behavior, cooperation, aggression.<br>
+      ✔ Cultural evolution — why some social norms persist and others die out.<br>
+      ✔ When players don't choose rationally — they just imitate successful strategies.<br>
+      ✔ Long-run prediction in populations: ESS strategies are what natural selection converges to.</p>
+    </div>
+
+    <div class="box box-example">
+      <div class="box-label">Hawk-Dove Game</div>
+      <p>Hawks always fight for resources; Doves always retreat. A pure Hawk population is invaded by Doves (Hawks fight each other and get injured; Doves face no costly conflicts against other Doves). A pure Dove population is invaded by Hawks (Hawks take all resources unchallenged). The ESS is a mixed strategy: a stable ratio of Hawks to Doves in the population — exactly the ratio found in many animal species.</p>
+    </div>
+
+    <div class="matrix-wrap">
+      <div class="matrix-caption">Hawk-Dove Game (V=resource value, C=cost of injury)</div>
+      <table class="mx">
+        <thead><tr><th></th><th>Opponent: Hawk</th><th>Opponent: Dove</th></tr></thead>
+        <tbody>
+          <tr><td class="row-h">Hawk</td><td>(V−C)/2</td><td class="hi-dom">V</td></tr>
+          <tr><td class="row-h">Dove</td><td>0</td><td class="hi-nash">V/2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="body-text" style="font-size:0.85rem;color:var(--text-dim)">If V > C: Hawk is ESS (always fight). If V < C: neither pure strategy is ESS — mixed ESS at p* = V/C fraction Hawks in population.</p>
+
+    <div class="scenarios">
+      <div class="scenario"><div class="s-icon">🦁</div><h4>Animal Contests</h4><p>Ritualized displays (roaring, puffing) are ESS — cheaper than full combat. Both parties back down before injury.</p></div>
+      <div class="scenario"><div class="s-icon">🦠</div><h4>Bacteria</h4><p>Antibiotic resistance is an ESS — resistant strains invade antibiotic environments, collapse without antibiotics.</p></div>
+      <div class="scenario"><div class="s-icon">🌐</div><h4>Social Norms</h4><p>Honesty, reciprocity, and punishment of cheaters are ESS in human societies — cheaters don't prosper long-term in stable communities.</p></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <!-- QUICK REFERENCE -->
+  <section class="strategy" id="quickref">
+    <h2 class="toc-section">★ Quick Reference</h2>
+    <p class="body-text" style="margin-bottom:1.5rem">All 19 strategies — when they apply and the key insight.</p>
+    <table class="qref">
+      <thead><tr><th>Strategy</th><th>Game Type</th><th>Use When</th><th>Key Insight</th></tr></thead>
+      <tbody>
+        <tr><td>Pure Strategy</td><td>Any</td><td>One option is clearly optimal</td><td>Commit fully; no randomization needed</td></tr>
+        <tr><td>Mixed Strategy</td><td>Zero-sum / no pure NE</td><td>Predictability is dangerous</td><td>Randomize to deny exploitation</td></tr>
+        <tr><td>Dominant Strategy</td><td>Any</td><td>One option beats all others always</td><td>No thinking needed — always pick it</td></tr>
+        <tr><td>IEDS</td><td>Any finite game</td><td>First step in solving any game</td><td>Rationally eliminate never-played options repeatedly</td></tr>
+        <tr><td>Nash Equilibrium</td><td>Any simultaneous</td><td>Predicting stable outcomes</td><td>No one wants to deviate unilaterally</td></tr>
+        <tr><td>Minimax / Maximin</td><td>Zero-sum</td><td>Purely competitive games</td><td>Guarantee your floor; plan for opponent's best</td></tr>
+        <tr><td>Subgame Perfect</td><td>Sequential</td><td>When threats must be credible</td><td>Eliminates bluffing via backward induction</td></tr>
+        <tr><td>Tit-for-Tat</td><td>Repeated PD</td><td>Long-term repeated interaction</td><td>Nice, retaliatory, forgiving, clear</td></tr>
+        <tr><td>Grim Trigger</td><td>Repeated</td><td>Strongest deterrent needed</td><td>One defection → permanent punishment</td></tr>
+        <tr><td>Win-Stay Lose-Shift</td><td>Noisy repeated</td><td>Noisy signals, frequent errors</td><td>Repeat success; switch after failure</td></tr>
+        <tr><td>Tit-for-Two-Tats</td><td>Noisy repeated</td><td>High noise, forgiving culture</td><td>Forgive once; only retaliate after 2 defections</td></tr>
+        <tr><td>Backward Induction</td><td>Sequential finite</td><td>Solving any game tree</td><td>Reason from the end backward to the start</td></tr>
+        <tr><td>Forward Induction</td><td>Sequential with signals</td><td>Actions reveal future plans</td><td>Past moves communicate intentions</td></tr>
+        <tr><td>Focal Point</td><td>Coordination</td><td>Multiple NE, no communication</td><td>Salience selects equilibrium</td></tr>
+        <tr><td>Correlated Equilibrium</td><td>Any with mediator</td><td>Shared signal available</td><td>Follow the signal — deviation never helps</td></tr>
+        <tr><td>Commitment / Threats</td><td>Sequential</td><td>First-mover advantage</td><td>Fewer options = more power</td></tr>
+        <tr><td>Signaling</td><td>Incomplete info</td><td>Revealing private information</td><td>Costly signal credibly separates types</td></tr>
+        <tr><td>Screening</td><td>Incomplete info</td><td>Inducing self-revelation</td><td>Design menus so types self-select</td></tr>
+        <tr><td>ESS</td><td>Evolutionary / population</td><td>No rational agents; selection pressure</td><td>Stable strategies resist invasion</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+</div>
+
+<script>
+// ── PROGRESS BAR ──
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = window.scrollY / (h.scrollHeight - h.clientHeight) * 100;
+  document.getElementById('pbar').style.width = pct + '%';
+});
+
+// ── MOBILE MENU ──
+function toggleMenu() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  const sb = document.getElementById('sidebar');
+  if (!sb.contains(e.target) && !e.target.classList.contains('hamburger')) sb.classList.remove('open');
+});
+
+// ── SCROLL REVEAL ──
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, {threshold: 0.06});
+document.querySelectorAll('.strategy').forEach(s => obs.observe(s));
+
+// ── ACTIVE NAV ──
+const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+const sections = [...document.querySelectorAll('.strategy, #quickref')];
+window.addEventListener('scroll', () => {
+  let cur = '';
+  sections.forEach(s => { if(window.scrollY >= s.offsetTop - 120) cur = s.id; });
+  navLinks.forEach(l => {
+    l.classList.toggle('active', l.getAttribute('href') === '#' + cur);
+  });
+});
+
+// ── MIXED STRATEGY CALCULATOR ──
+function calcMixed(val) {
+  const p = val / 100;
+  document.getElementById('prob-val').textContent = p.toFixed(2);
+  const keeper = 0.5; // keeper goes left 50%
+  // Expected payoffs (penalty kick: 1=goal, 0=save)
+  // If kicker goes Left p, Right (1-p); keeper goes Left k, Right (1-k)
+  const k = keeper;
+  const payKicker = p * k * 0   // kicker L, keeper L → save
+                  + p*(1-k)*1   // kicker L, keeper R → goal
+                  + (1-p)*k*1   // kicker R, keeper L → goal
+                  + (1-p)*(1-k)*0; // kicker R, keeper R → save
+  const eq = p.toFixed(2) === '0.50';
+  let msg = `Kicker P(Left) = ${p.toFixed(2)}, Keeper P(Left) = ${keeper.toFixed(2)}\n`;
+  msg += `Expected goal probability: ${(payKicker*100).toFixed(1)}%\n\n`;
+  if (p < 0.45) msg += `⚠ Kicker leans Left too much.\nKeeper exploits: always dive Left → blocks more goals.\nKicker should move toward 50%.`;
+  else if (p > 0.55) msg += `⚠ Kicker leans Right too much.\nKeeper exploits: always dive Right → blocks more goals.\nKicker should move toward 50%.`;
+  else msg += `✔ Near equilibrium. Keeper cannot exploit this distribution.\nNeither player can improve by changing probabilities unilaterally.`;
+  document.getElementById('mixed-out').textContent = msg;
+}
+calcMixed(50);
+
+// ── TFT SIMULATOR ──
+let tftRound = 1, tftMyLast = 'C', tftTotal = {me:0, opp:0};
+let tftLog = [];
+
+function tftPlay(myMove) {
+  if (tftRound > 8) return;
+  // Opponent TFT: cooperate round 1, then mirror
+  const oppMove = tftRound === 1 ? 'C' : tftMyLast;
+  document.getElementById('opp-move').textContent = oppMove;
+
+  let [sMe, sOpp] = pdPayoff(myMove, oppMove);
+  tftTotal.me += sMe; tftTotal.opp += sOpp;
+  tftLog.push({r: tftRound, m: myMove, o: oppMove, sm: sMe, so: sOpp});
+  tftMyLast = myMove;
+
+  let out = `Round  You    Opp    You-Yrs  Opp-Yrs\n${'─'.repeat(40)}\n`;
+  tftLog.forEach(l => {
+    out += `${String(l.r).padEnd(7)}${l.m.padEnd(7)}${l.o.padEnd(7)}${String(l.sm).padEnd(9)}${l.so}\n`;
+  });
+  out += '─'.repeat(40) + '\n';
+  out += `TOTAL  ${tftTotal.me} yrs (you)   ${tftTotal.opp} yrs (opp)\n`;
+  if(tftRound === 8) {
+    out += tftTotal.me < tftTotal.opp ? '\n✔ You served fewer years — good outcome!'
+         : tftTotal.me > tftTotal.opp ? '\n✗ You served more years — opponent exploited you.'
+         : '\n= Equal outcome.';
+  }
+  document.getElementById('tft-out').textContent = out;
+
+  tftRound++;
+  if (tftRound <= 8) {
+    document.getElementById('tft-round').textContent = tftRound;
+    document.getElementById('opp-move').textContent = 'waiting...';
+  } else {
+    document.querySelector('#tft-ui .btn-row').style.opacity = '0.3';
+    document.querySelector('#tft-ui .btn-row').style.pointerEvents = 'none';
+  }
+}
+
+function pdPayoff(a, b) {
+  if(a==='C'&&b==='C') return [1,1];
+  if(a==='C'&&b==='D') return [5,0];
+  if(a==='D'&&b==='C') return [0,5];
+  return [3,3];
+}
+
+function resetTFT() {
+  tftRound=1; tftMyLast='C'; tftTotal={me:0,opp:0}; tftLog=[];
+  document.getElementById('tft-round').textContent = 1;
+  document.getElementById('opp-move').textContent = 'waiting...';
+  document.getElementById('tft-out').textContent = 'Make your first move above. Opponent starts by cooperating.';
+  document.querySelector('#tft-ui .btn-row').style.opacity = '1';
+  document.querySelector('#tft-ui .btn-row').style.pointerEvents = 'auto';
+}
+</script>
+</body>
+</html>

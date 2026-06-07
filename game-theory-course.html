@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Theory — From Ground Up</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3f;
+    --accent: #e8c547;
+    --accent2: #5c6bc0;
+    --accent3: #ef5350;
+    --accent4: #66bb6a;
+    --text: #e8e8f0;
+    --text-dim: #8888aa;
+    --text-muted: #5555770;
+    --mono: 'IBM Plex Mono', monospace;
+    --serif: 'Playfair Display', serif;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; gap: 0; height: 56px;
+    overflow-x: auto;
+  }
+  .nav-logo {
+    font-family: var(--serif); font-size: 1.1rem; color: var(--accent);
+    white-space: nowrap; margin-right: 2rem; font-style: italic;
+  }
+  .nav-item {
+    font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim);
+    padding: 0 0.85rem; height: 56px; display: flex; align-items: center;
+    cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .nav-item:hover, .nav-item.active { color: var(--accent); border-color: var(--accent); }
+
+  /* MAIN */
+  main { padding-top: 56px; }
+
+  /* HERO */
+  .hero {
+    min-height: 80vh; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; text-align: center;
+    padding: 4rem 2rem;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: 
+      radial-gradient(ellipse 60% 50% at 30% 40%, rgba(92,107,192,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 60% at 75% 60%, rgba(232,197,71,0.06) 0%, transparent 70%);
+  }
+  .hero-tag {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.2em;
+    color: var(--accent); text-transform: uppercase;
+    border: 1px solid rgba(232,197,71,0.3); padding: 0.4rem 1rem;
+    margin-bottom: 2rem; display: inline-block;
+  }
+  .hero h1 {
+    font-family: var(--serif); font-size: clamp(2.8rem,7vw,6rem);
+    font-weight: 900; line-height: 1.05;
+    color: var(--text); margin-bottom: 1.5rem;
+  }
+  .hero h1 em { color: var(--accent); font-style: italic; }
+  .hero p {
+    font-size: 1.1rem; color: var(--text-dim); max-width: 560px;
+    margin-bottom: 3rem;
+  }
+  .grid-bg {
+    position: absolute; inset: 0; opacity: 0.04;
+    background-image: linear-gradient(var(--accent) 1px, transparent 1px),
+      linear-gradient(90deg, var(--accent) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+  .start-btn {
+    font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.1em;
+    background: var(--accent); color: #0a0a0f;
+    border: none; padding: 0.9rem 2.5rem; cursor: pointer;
+    font-weight: 500; transition: opacity 0.2s, transform 0.2s;
+  }
+  .start-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  /* SECTIONS */
+  .section {
+    max-width: 860px; margin: 0 auto; padding: 5rem 2rem;
+    border-top: 1px solid var(--border);
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.6s, transform 0.6s;
+  }
+  .section.visible { opacity: 1; transform: translateY(0); }
+
+  .section-tag {
+    font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.25em;
+    color: var(--accent); text-transform: uppercase; margin-bottom: 0.6rem;
+  }
+  .section h2 {
+    font-family: var(--serif); font-size: clamp(1.8rem,4vw,2.8rem);
+    font-weight: 700; margin-bottom: 1.5rem; line-height: 1.2;
+  }
+  .section p { color: var(--text-dim); margin-bottom: 1.2rem; font-size: 0.97rem; }
+  .section p strong { color: var(--text); font-weight: 500; }
+
+  /* DEFINITION BOX */
+  .defbox {
+    border-left: 3px solid var(--accent); background: var(--card);
+    padding: 1.2rem 1.5rem; margin: 1.5rem 0; border-radius: 0 4px 4px 0;
+  }
+  .defbox .label { font-family: var(--mono); font-size: 0.65rem; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .defbox p { color: var(--text); margin: 0; }
+
+  /* GRID CARDS */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 1.4rem; border-radius: 4px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .card:hover { border-color: var(--accent2); transform: translateY(-2px); }
+  .card-icon { font-size: 1.6rem; margin-bottom: 0.7rem; }
+  .card h3 { font-family: var(--serif); font-size: 1.05rem; margin-bottom: 0.5rem; }
+  .card p { font-size: 0.85rem; color: var(--text-dim); margin: 0; }
+
+  /* PAYOFF MATRIX */
+  .matrix-wrap { overflow-x: auto; margin: 1.5rem 0; }
+  .matrix-title { font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim); margin-bottom: 0.8rem; letter-spacing: 0.1em; }
+  table.matrix {
+    border-collapse: collapse; width: 100%; max-width: 500px;
+    font-family: var(--mono); font-size: 0.85rem;
+  }
+  table.matrix th, table.matrix td {
+    border: 1px solid var(--border); padding: 0.7rem 1.2rem;
+    text-align: center;
+  }
+  table.matrix th { background: var(--surface); color: var(--text-dim); font-weight: 400; font-size: 0.75rem; letter-spacing: 0.08em; }
+  table.matrix td { background: var(--card); }
+  table.matrix td.nash { background: rgba(232,197,71,0.12); border-color: var(--accent); color: var(--accent); }
+  table.matrix td.dominant { background: rgba(92,107,192,0.12); }
+  table.matrix .row-label { background: var(--surface); color: var(--accent2); font-weight: 500; }
+
+  /* INTERACTIVE PD */
+  .pd-game {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 2rem; border-radius: 4px; margin: 2rem 0;
+  }
+  .pd-game h3 { font-family: var(--serif); font-size: 1.3rem; margin-bottom: 0.5rem; }
+  .pd-game p.desc { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.5rem; }
+  .choices { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .choice-btn {
+    flex: 1; min-width: 140px; padding: 1rem;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--mono); font-size: 0.8rem;
+    cursor: pointer; border-radius: 4px; transition: all 0.2s;
+    text-align: center;
+  }
+  .choice-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .choice-btn.selected-c { border-color: var(--accent4); background: rgba(102,187,106,0.1); color: var(--accent4); }
+  .choice-btn.selected-d { border-color: var(--accent3); background: rgba(239,83,80,0.1); color: var(--accent3); }
+  .result-box {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 1.2rem; border-radius: 4px; font-family: var(--mono); font-size: 0.82rem;
+    display: none;
+  }
+  .result-box.show { display: block; }
+  .result-box .outcome { font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem; }
+  .result-box .scores { display: flex; gap: 2rem; margin-bottom: 0.7rem; }
+  .result-box .score { }
+  .result-box .score span { color: var(--text-dim); font-size: 0.72rem; }
+  .result-box .score strong { font-size: 1.2rem; }
+  .result-box .insight { font-size: 0.78rem; color: var(--text-dim); border-top: 1px solid var(--border); padding-top: 0.7rem; margin-top: 0.5rem; }
+  .tally { font-family: var(--mono); font-size: 0.78rem; color: var(--text-dim); margin-top: 0.8rem; }
+  .reset-btn {
+    margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem;
+    background: none; border: 1px solid var(--border); color: var(--text-dim);
+    padding: 0.4rem 1rem; cursor: pointer; transition: all 0.2s; border-radius: 3px;
+  }
+  .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* TIMELINE / CONCEPT FLOW */
+  .concept-flow { margin: 2rem 0; }
+  .flow-item { display: flex; gap: 1.5rem; margin-bottom: 1.5rem; position: relative; }
+  .flow-item::before {
+    content: ''; position: absolute; left: 19px; top: 40px;
+    width: 2px; height: calc(100% + 1rem); background: var(--border);
+  }
+  .flow-item:last-child::before { display: none; }
+  .flow-num {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--surface); border: 2px solid var(--accent2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 0.8rem; color: var(--accent2);
+    flex-shrink: 0;
+  }
+  .flow-content h4 { font-family: var(--serif); font-size: 1.05rem; margin-bottom: 0.3rem; }
+  .flow-content p { font-size: 0.85rem; color: var(--text-dim); margin: 0; }
+
+  /* HIGHLIGHT QUOTE */
+  .pull-quote {
+    font-family: var(--serif); font-size: 1.5rem; font-style: italic;
+    color: var(--accent); border-left: 3px solid var(--accent);
+    padding: 1rem 1.5rem; margin: 2rem 0; line-height: 1.4;
+  }
+
+  /* NASH FINDER */
+  .nash-finder { background: var(--card); border: 1px solid var(--border); padding: 2rem; border-radius: 4px; margin: 2rem 0; }
+  .nash-finder h3 { font-family: var(--serif); font-size: 1.2rem; margin-bottom: 0.5rem; }
+  .nash-finder p.desc { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.5rem; }
+  .nf-grid { display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 2px; max-width: 420px; margin-bottom: 1rem; }
+  .nf-cell {
+    background: var(--surface); padding: 0.6rem 0.5rem; text-align: center;
+    font-family: var(--mono); font-size: 0.8rem; cursor: pointer;
+    transition: background 0.15s; border-radius: 2px; min-height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    user-select: none;
+  }
+  .nf-cell.header { background: var(--bg); color: var(--text-dim); font-size: 0.7rem; cursor: default; }
+  .nf-cell.editable:hover { background: var(--border); }
+  .nf-cell.nash-eq { background: rgba(232,197,71,0.2); border: 1px solid var(--accent); color: var(--accent); }
+  .nf-cell.dom-row { background: rgba(92,107,192,0.15); }
+  .nf-cell input {
+    width: 100%; background: none; border: none; color: inherit;
+    font-family: var(--mono); font-size: 0.8rem; text-align: center; outline: none;
+  }
+  .nf-legend { display: flex; gap: 1.2rem; flex-wrap: wrap; font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); margin-top: 0.8rem; }
+  .nf-legend span { display: flex; align-items: center; gap: 0.4rem; }
+  .dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .dot-nash { background: rgba(232,197,71,0.5); border: 1px solid var(--accent); }
+  .dot-dom { background: rgba(92,107,192,0.4); }
+  .nf-btn {
+    font-family: var(--mono); font-size: 0.72rem; background: var(--accent2);
+    color: white; border: none; padding: 0.5rem 1.2rem; cursor: pointer;
+    border-radius: 3px; margin-top: 0.5rem; transition: opacity 0.2s;
+  }
+  .nf-btn:hover { opacity: 0.8; }
+
+  /* STRATEGY TYPES */
+  .strat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .strat-card { background: var(--card); border: 1px solid var(--border); padding: 1.2rem; border-radius: 4px; }
+  .strat-card .tag { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em; padding: 0.25rem 0.6rem; border-radius: 2px; display: inline-block; margin-bottom: 0.7rem; }
+  .tag-dom { background: rgba(92,107,192,0.2); color: var(--accent2); }
+  .tag-mix { background: rgba(232,197,71,0.15); color: var(--accent); }
+  .tag-pure { background: rgba(102,187,106,0.15); color: var(--accent4); }
+  .strat-card h4 { font-family: var(--serif); font-size: 0.95rem; margin-bottom: 0.4rem; }
+  .strat-card p { font-size: 0.82rem; color: var(--text-dim); margin: 0; }
+
+  /* INFO SETS */
+  .info-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+    padding: 1.2rem 1.5rem; margin: 1rem 0; display: flex; gap: 1rem; align-items: flex-start;
+  }
+  .info-box .icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 0.1rem; }
+  .info-box p { font-size: 0.85rem; color: var(--text-dim); margin: 0; }
+  .info-box p strong { color: var(--text); }
+
+  /* GAME TYPES TABLE */
+  .types-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+  .types-table th { background: var(--surface); padding: 0.7rem 1rem; text-align: left; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+  .types-table td { padding: 0.7rem 1rem; border-bottom: 1px solid rgba(42,42,63,0.5); vertical-align: top; }
+  .types-table td:first-child { color: var(--accent); font-family: var(--mono); font-size: 0.8rem; }
+  .types-table td:nth-child(2) { color: var(--text); }
+  .types-table td:nth-child(3) { color: var(--text-dim); font-style: italic; }
+
+  /* ITERATED GAME SIM */
+  .sim-wrap { background: var(--card); border: 1px solid var(--border); padding: 2rem; border-radius: 4px; margin: 2rem 0; }
+  .sim-wrap h3 { font-family: var(--serif); font-size: 1.2rem; margin-bottom: 0.5rem; }
+  .sim-wrap p.desc { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.5rem; }
+  .strategies { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.2rem; }
+  .strat-select {
+    font-family: var(--mono); font-size: 0.72rem; padding: 0.45rem 0.9rem;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-dim);
+    cursor: pointer; border-radius: 3px; transition: all 0.2s;
+  }
+  .strat-select.active { border-color: var(--accent); color: var(--accent); background: rgba(232,197,71,0.08); }
+  .sim-output { font-family: var(--mono); font-size: 0.78rem; color: var(--text-dim); background: var(--surface); padding: 1rem; border-radius: 3px; min-height: 80px; white-space: pre-wrap; line-height: 1.8; }
+  .run-btn {
+    font-family: var(--mono); font-size: 0.72rem; background: var(--accent);
+    color: #0a0a0f; border: none; padding: 0.55rem 1.4rem; cursor: pointer;
+    border-radius: 3px; margin-bottom: 1rem; font-weight: 500; transition: opacity 0.2s;
+  }
+  .run-btn:hover { opacity: 0.85; }
+
+  /* PROGRESS */
+  .progress-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 3px;
+    background: var(--border); z-index: 200;
+  }
+  .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+
+  /* FOOTER */
+  footer { text-align: center; padding: 3rem 2rem; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim); }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  /* SCROLL ANIMATIONS */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  .hero-content > * { animation: fadeUp 0.7s ease both; }
+  .hero-content > *:nth-child(1) { animation-delay: 0.1s; }
+  .hero-content > *:nth-child(2) { animation-delay: 0.25s; }
+  .hero-content > *:nth-child(3) { animation-delay: 0.4s; }
+  .hero-content > *:nth-child(4) { animation-delay: 0.55s; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: rgba(232,197,71,0.08); border: 1px solid rgba(232,197,71,0.2);
+    padding: 0.3rem 0.8rem; border-radius: 20px;
+    font-family: var(--mono); font-size: 0.65rem; color: var(--accent);
+    margin-right: 0.5rem; margin-bottom: 0.5rem;
+  }
+
+  @media (max-width:600px) {
+    .section { padding: 3rem 1.2rem; }
+    .pd-game, .nash-finder, .sim-wrap { padding: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-logo">Game Theory</div>
+  <div class="nav-item active" data-section="intro" onclick="scrollTo('intro',this)">Intro</div>
+  <div class="nav-item" data-section="basics" onclick="scrollTo('basics',this)">Basics</div>
+  <div class="nav-item" data-section="prisoners" onclick="scrollTo('prisoners',this)">Prisoner's Dilemma</div>
+  <div class="nav-item" data-section="nash" onclick="scrollTo('nash',this)">Nash Equilibrium</div>
+  <div class="nav-item" data-section="strategies" onclick="scrollTo('strategies',this)">Strategies</div>
+  <div class="nav-item" data-section="types" onclick="scrollTo('types',this)">Game Types</div>
+  <div class="nav-item" data-section="iterated" onclick="scrollTo('iterated',this)">Iterated Games</div>
+  <div class="nav-item" data-section="real" onclick="scrollTo('real',this)">Real World</div>
+</nav>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<main>
+  <!-- HERO -->
+  <section class="hero" id="intro-hero">
+    <div class="grid-bg"></div>
+    <div class="hero-content" style="position:relative;z-index:1">
+      <div class="hero-tag">A Complete Primer</div>
+      <h1>The Science of<br><em>Strategic Decisions</em></h1>
+      <p>Game Theory is the mathematics of rational choice when your outcome depends on what others do. Used by economists, generals, politicians, and biologists.</p>
+      <button class="start-btn" onclick="document.getElementById('intro').scrollIntoView({behavior:'smooth'})">BEGIN THE COURSE ↓</button>
+    </div>
+  </section>
+
+  <!-- SECTION 1: INTRO -->
+  <section class="section" id="intro">
+    <div class="section-tag">Chapter 01</div>
+    <h2>What is Game Theory?</h2>
+    <p>Game Theory is the <strong>mathematical study of strategic interaction</strong> — situations where the outcome for each participant depends not just on their own choices, but on the choices of others.</p>
+    <p>It was formalized by mathematician <strong>John von Neumann</strong> and economist <strong>Oskar Morgenstern</strong> in 1944, and later revolutionized by <strong>John Nash</strong>, whose concept of equilibrium earned a Nobel Prize in 1994.</p>
+
+    <div class="defbox">
+      <div class="label">Core Definition</div>
+      <p>A <strong>game</strong>, in this context, is any situation with: (1) rational <em>players</em>, (2) available <em>strategies</em> for each player, and (3) <em>payoffs</em> that depend on the combination of chosen strategies.</p>
+    </div>
+
+    <p>Game theory is not about games like chess alone — it applies to:</p>
+    <div class="cards">
+      <div class="card"><div class="card-icon">🏛️</div><h3>Politics</h3><p>Arms races, coalition formation, voting behavior, international treaties.</p></div>
+      <div class="card"><div class="card-icon">📈</div><h3>Economics</h3><p>Price competition, auctions, bargaining, oligopoly markets.</p></div>
+      <div class="card"><div class="card-icon">🧬</div><h3>Biology</h3><p>Evolutionary strategies, animal behavior, cooperation in nature.</p></div>
+      <div class="card"><div class="card-icon">⚔️</div><h3>Military</h3><p>Battle strategies, nuclear deterrence, intelligence operations.</p></div>
+    </div>
+
+    <div class="pull-quote">"Every man, wherever he goes, is encompassed by a cloud of comforting convictions — and game theory is the science that strips them away."</div>
+
+    <p>The key assumption: all players are <strong>rational</strong> — they aim to maximize their own payoff, and they know other players are rational too.</p>
+  </section>
+
+  <!-- SECTION 2: BASICS -->
+  <section class="section" id="basics">
+    <div class="section-tag">Chapter 02</div>
+    <h2>The Building Blocks</h2>
+    <p>Every game theory problem has three fundamental components:</p>
+
+    <div class="concept-flow">
+      <div class="flow-item">
+        <div class="flow-num">1</div>
+        <div class="flow-content">
+          <h4>Players</h4>
+          <p>Decision-makers in the game. Can be individuals, firms, countries, or even nature itself. Denoted P₁, P₂, … Pₙ.</p>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-num">2</div>
+        <div class="flow-content">
+          <h4>Strategies</h4>
+          <p>A complete plan of action — what a player will do in every possible situation. A <em>strategy set</em> S = {s₁, s₂, …} contains all available options.</p>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-num">3</div>
+        <div class="flow-content">
+          <h4>Payoffs (Utility)</h4>
+          <p>The outcome — numerical reward or punishment — each player receives given the combination of strategies chosen. Written as u₁(s₁,s₂), u₂(s₁,s₂).</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2rem 0 1rem">The Normal Form (Matrix)</h3>
+    <p>The most common way to represent a game is as a <strong>payoff matrix</strong>. Rows = Player 1's strategies, Columns = Player 2's. Each cell shows (P1 payoff, P2 payoff).</p>
+
+    <div class="matrix-wrap">
+      <div class="matrix-title">Example: A Simple 2×2 Game</div>
+      <table class="matrix">
+        <thead>
+          <tr><th></th><th>P2: Left</th><th>P2: Right</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="row-label">P1: Up</td><td>(3, 3)</td><td>(1, 4)</td></tr>
+          <tr><td class="row-label">P1: Down</td><td>(4, 1)</td><td class="nash">(2, 2) ★</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-box">
+      <div class="icon">📌</div>
+      <p><strong>How to read it:</strong> If P1 plays "Up" and P2 plays "Left", P1 gets 3 and P2 gets 3. The ★ marks a Nash Equilibrium — you'll learn exactly what that means in Chapter 4.</p>
+    </div>
+
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2rem 0 1rem">Rationality & Common Knowledge</h3>
+    <p>Game theory assumes:</p>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🧠</div>
+        <h3>Rationality</h3>
+        <p>Each player chooses the strategy that maximizes their own payoff, given their beliefs about what others will do.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔄</div>
+        <h3>Common Knowledge</h3>
+        <p>"I know that you know that I know that you know…" — the game structure is known to everyone, infinitely.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: PRISONER'S DILEMMA -->
+  <section class="section" id="prisoners">
+    <div class="section-tag">Chapter 03</div>
+    <h2>The Prisoner's Dilemma</h2>
+    <p>The most famous game in all of game theory. Two suspects are arrested. They can't communicate. Each must choose: <strong>Cooperate</strong> (stay silent) or <strong>Defect</strong> (betray the other).</p>
+
+    <div class="defbox">
+      <div class="label">The Scenario</div>
+      <p>If both stay silent → each gets <strong>1 year</strong>. If both betray → each gets <strong>3 years</strong>. If one betrays and one stays silent → betrayer goes <strong>free</strong>, silent one gets <strong>5 years</strong>.</p>
+    </div>
+
+    <div class="matrix-wrap">
+      <div class="matrix-title">Prisoner's Dilemma — Payoff Matrix (years in prison, lower = better)</div>
+      <table class="matrix">
+        <thead>
+          <tr><th></th><th>B: Cooperate (Silent)</th><th>B: Defect (Betray)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="row-label">A: Cooperate</td><td class="dominant">(1, 1)</td><td>(5, 0)</td></tr>
+          <tr><td class="row-label">A: Defect</td><td>(0, 5)</td><td class="nash">(3, 3) ★</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The tragedy: <strong>Defect</strong> is a dominant strategy for both — no matter what the other does, betraying is always "better" for you individually. Yet if both defect, both are worse off than if both had cooperated.</p>
+
+    <div class="pull-quote">"Individual rationality leads to collective irrationality."</div>
+
+    <!-- INTERACTIVE PD -->
+    <div class="pd-game">
+      <h3>🎮 Play It Yourself</h3>
+      <p class="desc">You are Prisoner A. The computer plays Prisoner B. What do you choose? (Lower years = better for you)</p>
+      <div class="choices">
+        <button class="choice-btn" id="btn-c" onclick="playPD('C')">🤝 Cooperate<br><span style="font-size:0.7rem;opacity:0.7">Stay silent</span></button>
+        <button class="choice-btn" id="btn-d" onclick="playPD('D')">🗡️ Defect<br><span style="font-size:0.7rem;opacity:0.7">Betray</span></button>
+      </div>
+      <div class="result-box" id="pd-result">
+        <div class="outcome" id="pd-outcome"></div>
+        <div class="scores">
+          <div class="score"><span>You (A)</span><br><strong id="pd-score-a"></strong> yrs</div>
+          <div class="score"><span>Computer (B)</span><br><strong id="pd-score-b"></strong> yrs</div>
+        </div>
+        <div class="insight" id="pd-insight"></div>
+      </div>
+      <div class="tally" id="pd-tally"></div>
+      <button class="reset-btn" onclick="resetPD()">Reset</button>
+    </div>
+
+    <p>This dilemma appears everywhere: <span class="badge">Arms Races</span><span class="badge">Price Wars</span><span class="badge">Climate Change</span><span class="badge">Tax Evasion</span><span class="badge">Doping in Sports</span></p>
+  </section>
+
+  <!-- SECTION 4: NASH -->
+  <section class="section" id="nash">
+    <div class="section-tag">Chapter 04</div>
+    <h2>Nash Equilibrium</h2>
+    <p>Named after John Nash (depicted in <em>A Beautiful Mind</em>), a Nash Equilibrium is a set of strategies — one for each player — where <strong>no player can benefit by unilaterally changing their strategy</strong>, given what the others are doing.</p>
+
+    <div class="defbox">
+      <div class="label">Formal Definition</div>
+      <p>A strategy profile (s₁*, s₂*, …, sₙ*) is a Nash Equilibrium if for every player i:<br>
+      <span style="font-family:var(--mono);font-size:0.85rem">uᵢ(sᵢ*, s₋ᵢ*) ≥ uᵢ(sᵢ, s₋ᵢ*) for all sᵢ ∈ Sᵢ</span><br><br>
+      In plain English: given everyone else's strategy, you are playing your best response.</p>
+    </div>
+
+    <p>Think of it as a <strong>stable resting point</strong> — once reached, no one wants to deviate. It doesn't mean it's the <em>best</em> outcome (recall the Prisoner's Dilemma), just a <em>stable</em> one.</p>
+
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2rem 0 1rem">Finding Nash Equilibria: Best Response Method</h3>
+    <p>For each player, find their <strong>best response</strong> to each of the other player's strategies. Where both players are simultaneously playing best responses → Nash Equilibrium.</p>
+
+    <!-- INTERACTIVE NASH FINDER -->
+    <div class="nash-finder">
+      <h3>🔍 Nash Equilibrium Finder</h3>
+      <p class="desc">Edit payoffs in the 3×3 matrix (format: "A,B"). Click "Find Nash" to highlight equilibria.</p>
+      <div class="nf-grid" id="nf-grid">
+        <!-- built by JS -->
+      </div>
+      <button class="nf-btn" onclick="findNash()">Find Nash Equilibria</button>
+      <div class="nf-legend">
+        <span><span class="dot dot-nash"></span> Nash Equilibrium</span>
+        <span>Format: (P1 payoff, P2 payoff)</span>
+      </div>
+      <div id="nf-result" style="font-family:var(--mono);font-size:0.78rem;color:var(--text-dim);margin-top:0.8rem;"></div>
+    </div>
+
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2rem 0 1rem">Nash's Theorem</h3>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <p><strong>Every finite game with mixed strategies has at least one Nash Equilibrium.</strong> This was Nash's landmark 1950 proof — a guarantee that stable outcomes always exist, even in complex games.</p>
+    </div>
+
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2rem 0 1rem">Classic Examples</h3>
+    <div class="matrix-wrap">
+      <div class="matrix-title">Battle of the Sexes — Two Nash Equilibria</div>
+      <table class="matrix">
+        <thead><tr><th></th><th>B: Opera</th><th>B: Football</th></tr></thead>
+        <tbody>
+          <tr><td class="row-label">A: Opera</td><td class="nash">(2, 1) ★</td><td>(0, 0)</td></tr>
+          <tr><td class="row-label">A: Football</td><td>(0, 0)</td><td class="nash">(1, 2) ★</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Both players want to be together, but disagree on where. There are <strong>two pure strategy Nash Equilibria</strong> and one mixed strategy equilibrium.</p>
+  </section>
+
+  <!-- SECTION 5: STRATEGIES -->
+  <section class="section" id="strategies">
+    <div class="section-tag">Chapter 05</div>
+    <h2>Types of Strategies</h2>
+    <p>In game theory, a <strong>strategy</strong> is a complete contingent plan — specifying what to do in every possible situation, not just a single move.</p>
+
+    <div class="strat-grid">
+      <div class="strat-card">
+        <div class="tag tag-pure">PURE</div>
+        <h4>Pure Strategy</h4>
+        <p>Choose one specific action with certainty. "Always cooperate." No randomness involved.</p>
+      </div>
+      <div class="strat-card">
+        <div class="tag tag-mix">MIXED</div>
+        <h4>Mixed Strategy</h4>
+        <p>Randomize over actions with given probabilities. "Cooperate 60% of the time." Opponent cannot predict you.</p>
+      </div>
+      <div class="strat-card">
+        <div class="tag tag-dom">DOMINANT</div>
+        <h4>Dominant Strategy</h4>
+        <p>A strategy that is best regardless of what others do. Always pick this if it exists — it simplifies the game enormously.</p>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2rem 0 1rem">Dominant Strategy Elimination</h3>
+    <p>If a strategy is <strong>strictly dominated</strong> (another strategy always does better), rational players never choose it. We can eliminate it, then repeat for the simpler game — this is called <strong>Iterated Elimination of Dominated Strategies (IEDS)</strong>.</p>
+
+    <div class="defbox">
+      <div class="label">Example</div>
+      <p>If "Middle" always gives P1 less than "Left" regardless of P2's choice → eliminate "Middle". Now solve the remaining 2×2 game. IEDS can sometimes solve the entire game down to a unique outcome.</p>
+    </div>
+
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2rem 0 1rem">Mixed Strategy Nash Equilibrium</h3>
+    <p>When no pure strategy equilibrium exists (e.g., Rock-Paper-Scissors), players use mixed strategies. The key insight: in a mixed strategy equilibrium, each player must be <strong>indifferent</strong> between all strategies they mix over.</p>
+
+    <div class="matrix-wrap">
+      <div class="matrix-title">Rock-Paper-Scissors — Only Mixed Strategy NE</div>
+      <table class="matrix">
+        <thead><tr><th></th><th>Rock</th><th>Paper</th><th>Scissors</th></tr></thead>
+        <tbody>
+          <tr><td class="row-label">Rock</td><td>(0,0)</td><td>(-1,1)</td><td>(1,-1)</td></tr>
+          <tr><td class="row-label">Paper</td><td>(1,-1)</td><td>(0,0)</td><td>(-1,1)</td></tr>
+          <tr><td class="row-label">Scissors</td><td>(-1,1)</td><td>(1,-1)</td><td>(0,0)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The unique Nash Equilibrium: each player randomizes uniformly — ⅓ Rock, ⅓ Paper, ⅓ Scissors. Any deviation is exploitable.</p>
+  </section>
+
+  <!-- SECTION 6: GAME TYPES -->
+  <section class="section" id="types">
+    <div class="section-tag">Chapter 06</div>
+    <h2>A Taxonomy of Games</h2>
+    <p>Games come in many varieties. Understanding the type shapes which tools apply.</p>
+
+    <table class="types-table">
+      <thead><tr><th>Dimension</th><th>Types</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>Players</td><td>2-player vs N-player</td><td>Chess vs. Oligopoly market</td></tr>
+        <tr><td>Sum</td><td>Zero-sum vs. Non-zero-sum</td><td>Poker vs. Trade negotiation</td></tr>
+        <tr><td>Information</td><td>Perfect vs. Imperfect vs. Incomplete</td><td>Chess vs. Poker vs. Sealed auction</td></tr>
+        <tr><td>Timing</td><td>Simultaneous vs. Sequential</td><td>RPS vs. Chess moves</td></tr>
+        <tr><td>Repetition</td><td>One-shot vs. Repeated</td><td>Single auction vs. Ongoing rivalry</td></tr>
+        <tr><td>Communication</td><td>Cooperative vs. Non-cooperative</td><td>Cartel vs. Price war</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2rem 0 1rem">Zero-Sum Games</h3>
+    <p>In a zero-sum game, one player's gain is exactly another's loss. Total payoff always sums to zero. These are <strong>purely competitive</strong>.</p>
+    <div class="info-box">
+      <div class="icon">⚖️</div>
+      <p>Von Neumann's <strong>Minimax Theorem</strong>: In every finite two-player zero-sum game, both players have an optimal mixed strategy. P1 maximizes their minimum gain; P2 minimizes P1's maximum gain. Both converge to the same value — the <em>value of the game</em>.</p>
+    </div>
+
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2rem 0 1rem">Sequential Games & Backward Induction</h3>
+    <p>When players move in order (represented by a <strong>game tree</strong>), the solution method is <strong>backward induction</strong>: start at the last move, find what a rational player would do, then work backward to the first move.</p>
+    <div class="defbox">
+      <div class="label">Centipede Game Insight</div>
+      <p>Backward induction predicts players defect immediately in many sequential games — yet experiments show humans often cooperate far longer, revealing limits of pure rationality.</p>
+    </div>
+  </section>
+
+  <!-- SECTION 7: ITERATED GAMES -->
+  <section class="section" id="iterated">
+    <div class="section-tag">Chapter 07</div>
+    <h2>Iterated Games & Cooperation</h2>
+    <p>When the same game is played repeatedly, cooperation becomes rational. The <strong>shadow of the future</strong> changes everything — players can reward and punish each other across rounds.</p>
+
+    <div class="info-box">
+      <div class="icon">🔁</div>
+      <p><strong>Folk Theorem:</strong> In infinitely repeated games, virtually any outcome (including full cooperation) can be sustained as a Nash Equilibrium, as long as players are patient enough (discount factor δ is high).</p>
+    </div>
+
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2rem 0 1rem">Famous Strategies in Iterated PD</h3>
+    <div class="cards">
+      <div class="card"><div class="card-icon">🤝</div><h3>Tit-for-Tat</h3><p>Start cooperating. Then copy your opponent's last move. Simple, forgiving once, never exploitable.</p></div>
+      <div class="card"><div class="card-icon">😇</div><h3>Always Cooperate</h3><p>Never defect. Easily exploited by defectors. Only works if everyone plays it.</p></div>
+      <div class="card"><div class="card-icon">😈</div><h3>Always Defect</h3><p>Always betray. Short-run gains, but loses against Tit-for-Tat in long runs.</p></div>
+      <div class="card"><div class="card-icon">💣</div><h3>Grim Trigger</h3><p>Cooperate until opponent defects once — then defect forever. Maximally punishing.</p></div>
+    </div>
+
+    <!-- STRATEGY SIMULATOR -->
+    <div class="sim-wrap">
+      <h3>⚡ Strategy Simulator</h3>
+      <p class="desc">Run 10 rounds of Iterated Prisoner's Dilemma. Choose your strategy vs. the computer's.</p>
+      <div style="margin-bottom:0.8rem">
+        <div style="font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);margin-bottom:0.4rem">YOUR STRATEGY</div>
+        <div class="strategies">
+          <button class="strat-select active" id="s-tft" onclick="selectStrat('TFT',this)">Tit-for-Tat</button>
+          <button class="strat-select" id="s-ac" onclick="selectStrat('AC',this)">Always Cooperate</button>
+          <button class="strat-select" id="s-ad" onclick="selectStrat('AD',this)">Always Defect</button>
+          <button class="strat-select" id="s-gt" onclick="selectStrat('GT',this)">Grim Trigger</button>
+          <button class="strat-select" id="s-rand" onclick="selectStrat('RAND',this)">Random</button>
+        </div>
+      </div>
+      <div style="margin-bottom:1rem">
+        <div style="font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);margin-bottom:0.4rem">OPPONENT</div>
+        <div class="strategies">
+          <button class="strat-select active" id="o-tft" onclick="selectOpp('TFT',this)">Tit-for-Tat</button>
+          <button class="strat-select" id="o-ad" onclick="selectOpp('AD',this)">Always Defect</button>
+          <button class="strat-select" id="o-ac" onclick="selectOpp('AC',this)">Always Cooperate</button>
+          <button class="strat-select" id="o-gt" onclick="selectOpp('GT',this)">Grim Trigger</button>
+        </div>
+      </div>
+      <button class="run-btn" onclick="runSim()">▶ RUN SIMULATION</button>
+      <div class="sim-output" id="sim-out">Select strategies and click Run Simulation...</div>
+    </div>
+
+    <p>Robert Axelrod's famous 1980 tournaments showed <strong>Tit-for-Tat</strong> won repeatedly — being <em>nice</em> (never first to defect), <em>retaliatory</em> (punish defection), <em>forgiving</em> (return to cooperation), and <em>clear</em> (predictable behavior).</p>
+  </section>
+
+  <!-- SECTION 8: REAL WORLD -->
+  <section class="section" id="real">
+    <div class="section-tag">Chapter 08</div>
+    <h2>Game Theory in the Real World</h2>
+    <p>From your daily decisions to geopolitics, game theory is everywhere once you see it.</p>
+
+    <div class="concept-flow">
+      <div class="flow-item">
+        <div class="flow-num">🏦</div>
+        <div class="flow-content">
+          <h4>Auctions & Mechanism Design</h4>
+          <p>How should a government auction spectrum licenses? Vickrey auctions (second-price) incentivize truthful bidding — the winner pays the second-highest bid, making honesty the dominant strategy. Google's AdWords uses this principle.</p>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-num">☢️</div>
+        <div class="flow-content">
+          <h4>Nuclear Deterrence</h4>
+          <p>The Cold War was a repeated game of Mutual Assured Destruction (MAD). The credible threat of total retaliation created a Nash Equilibrium of no first strike — neither side wants to deviate from "don't launch."</p>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-num">🚗</div>
+        <div class="flow-content">
+          <h4>Traffic & Congestion</h4>
+          <p>Braess's Paradox: adding a road can slow everyone down. Each driver individually optimizing their route creates a Nash Equilibrium that is collectively worse than if a central authority assigned routes.</p>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-num">🌿</div>
+        <div class="flow-content">
+          <h4>Climate Negotiations</h4>
+          <p>Each country prefers others to reduce emissions while it free-rides. This is a global N-player Prisoner's Dilemma. Without enforcement mechanisms, cooperation collapses — which is why binding treaties need sanctions.</p>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-num">💼</div>
+        <div class="flow-content">
+          <h4>Labor Markets & Signaling</h4>
+          <p>Why do employers demand degrees for jobs that don't need them? Spence's Signaling Model: education is a costly signal. Getting a degree proves you're productive (since it's cheaper for high types), even if it teaches nothing directly relevant.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pull-quote">"The theory of games is not merely a theory of games — it is a theory of strategic rationality itself."</div>
+
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2rem 0 1rem">What to Study Next</h3>
+    <div class="cards">
+      <div class="card"><div class="card-icon">📚</div><h3>Extensive Form Games</h3><p>Game trees, subgame perfect equilibrium, backward induction in depth.</p></div>
+      <div class="card"><div class="card-icon">📊</div><h3>Bayesian Games</h3><p>Incomplete information — players don't know each other's types. Poker, auctions.</p></div>
+      <div class="card"><div class="card-icon">🔧</div><h3>Mechanism Design</h3><p>"Reverse game theory" — design the rules of a game to achieve a desired outcome.</p></div>
+      <div class="card"><div class="card-icon">🧬</div><h3>Evolutionary GT</h3><p>Strategies that reproduce based on fitness. No rationality needed — applied in biology.</p></div>
+    </div>
+
+    <div class="defbox" style="margin-top:2rem">
+      <div class="label">Key Thinkers</div>
+      <p><strong>John von Neumann</strong> (Minimax, 1928) · <strong>John Nash</strong> (Equilibrium, 1950) · <strong>Thomas Schelling</strong> (Focal Points, 1960) · <strong>Robert Aumann</strong> (Repeated Games) · <strong>Roger Myerson</strong> (Mechanism Design) · <strong>Alvin Roth</strong> (Market Design)</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Game Theory — A Complete Primer &nbsp;·&nbsp; Built for learning &nbsp;·&nbsp; Concepts by Nash, von Neumann, Schelling
+</footer>
+
+<script>
+// NAV SCROLL
+function scrollTo(id, el) {
+  document.getElementById(id).scrollIntoView({behavior:'smooth'});
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+}
+
+// PROGRESS BAR
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (window.scrollY / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+});
+
+// INTERSECTION OBSERVER for section reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting) e.target.classList.add('visible');
+  });
+}, {threshold: 0.08});
+document.querySelectorAll('.section').forEach(s => observer.observe(s));
+
+// ---- PRISONER'S DILEMMA ----
+let pdRounds = [], pdTotal = {A:0, B:0};
+function playPD(myChoice) {
+  // Computer plays random (weighted toward D to demonstrate dilemma)
+  const compChoice = Math.random() < 0.55 ? 'D' : 'C';
+  let sA, sB, outcome, insight;
+  if(myChoice==='C' && compChoice==='C') { sA=1; sB=1; outcome='🤝 Both Cooperated'; insight='Best joint outcome! If only this were stable...'; }
+  else if(myChoice==='C' && compChoice==='D') { sA=5; sB=0; outcome='😢 You cooperated, they betrayed'; insight='You were exploited. This is why cooperation is risky.'; }
+  else if(myChoice==='D' && compChoice==='C') { sA=0; sB=5; outcome='😈 You betrayed, they cooperated'; insight='You defected and gained. But can you trust this to last?'; }
+  else { sA=3; sB=3; outcome='💀 Both Defected — Nash Equilibrium'; insight='Individually rational, collectively terrible. This is the dilemma.'; }
+
+  pdTotal.A += sA; pdTotal.B += sB;
+  pdRounds.push({myChoice, compChoice, sA, sB});
+
+  document.getElementById('pd-outcome').textContent = outcome;
+  document.getElementById('pd-score-a').textContent = sA;
+  document.getElementById('pd-score-b').textContent = sB;
+  document.getElementById('pd-insight').textContent = insight;
+  document.getElementById('pd-result').classList.add('show');
+  document.getElementById('pd-tally').textContent = 
+    `Round ${pdRounds.length} | Your total: ${pdTotal.A} yrs | Computer: ${pdTotal.B} yrs`;
+  
+  const btnC = document.getElementById('btn-c');
+  const btnD = document.getElementById('btn-d');
+  btnC.className = 'choice-btn' + (myChoice==='C'?' selected-c':'');
+  btnD.className = 'choice-btn' + (myChoice==='D'?' selected-d':'');
+}
+function resetPD() {
+  pdRounds=[]; pdTotal={A:0,B:0};
+  document.getElementById('pd-result').classList.remove('show');
+  document.getElementById('pd-tally').textContent='';
+  document.getElementById('btn-c').className='choice-btn';
+  document.getElementById('btn-d').className='choice-btn';
+}
+
+// ---- NASH FINDER ----
+const defaultPayoffs = [
+  [[3,3],[1,4],[2,2]],
+  [[4,1],[2,2],[0,3]],
+  [[2,2],[3,0],[1,1]]
+];
+const rowLabels = ['Top','Mid','Bot'];
+const colLabels = ['Left','Mid','Right'];
+let nfData = JSON.parse(JSON.stringify(defaultPayoffs));
+
+function buildNFGrid() {
+  const grid = document.getElementById('nf-grid');
+  grid.innerHTML = '';
+  // Top-left empty
+  grid.appendChild(Object.assign(document.createElement('div'),{className:'nf-cell header',textContent:''}));
+  colLabels.forEach(c => grid.appendChild(Object.assign(document.createElement('div'),{className:'nf-cell header',textContent:`P2: ${c}`})));
+  for(let r=0;r<3;r++) {
+    const rowH = document.createElement('div');
+    rowH.className = 'nf-cell header';
+    rowH.textContent = `P1: ${rowLabels[r]}`;
+    grid.appendChild(rowH);
+    for(let c=0;c<3;c++) {
+      const cell = document.createElement('div');
+      cell.className = 'nf-cell editable';
+      cell.id = `nf-${r}-${c}`;
+      const inp = document.createElement('input');
+      inp.value = nfData[r][c].join(',');
+      inp.setAttribute('data-r',r); inp.setAttribute('data-c',c);
+      inp.addEventListener('change', function(){
+        const parts = this.value.split(',').map(Number);
+        if(parts.length===2 && !parts.some(isNaN)) {
+          nfData[parseInt(this.dataset.r)][parseInt(this.dataset.c)] = parts;
+        }
+      });
+      cell.appendChild(inp);
+      grid.appendChild(cell);
+    }
+  }
+}
+buildNFGrid();
+
+function findNash() {
+  // Remove highlights
+  for(let r=0;r<3;r++) for(let c=0;c<3;c++) {
+    const cell = document.getElementById(`nf-${r}-${c}`);
+    cell.classList.remove('nash-eq');
+  }
+  const nashCells = [];
+  for(let r=0;r<3;r++) {
+    for(let c=0;c<3;c++) {
+      // Best response for P1 given col c?
+      let maxP1 = -Infinity;
+      for(let rr=0;rr<3;rr++) maxP1 = Math.max(maxP1, nfData[rr][c][0]);
+      const p1BR = nfData[r][c][0] === maxP1;
+      // Best response for P2 given row r?
+      let maxP2 = -Infinity;
+      for(let cc=0;cc<3;cc++) maxP2 = Math.max(maxP2, nfData[r][cc][1]);
+      const p2BR = nfData[r][c][1] === maxP2;
+      if(p1BR && p2BR) {
+        document.getElementById(`nf-${r}-${c}`).classList.add('nash-eq');
+        nashCells.push(`(${rowLabels[r]}, ${colLabels[c]})`);
+      }
+    }
+  }
+  const res = document.getElementById('nf-result');
+  res.textContent = nashCells.length 
+    ? `Nash Equilibria found: ${nashCells.join(' · ')}` 
+    : 'No pure strategy Nash Equilibrium found. Try mixed strategies.';
+  res.style.color = nashCells.length ? 'var(--accent)' : 'var(--accent3)';
+}
+
+// ---- ITERATED GAME SIM ----
+let myStrat = 'TFT', oppStrat = 'TFT';
+function selectStrat(s, el) {
+  myStrat = s;
+  document.querySelectorAll('.strategies:first-of-type .strat-select').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+function selectOpp(s, el) {
+  oppStrat = s;
+  const btns = document.querySelectorAll('.strat-select[id^="o-"]');
+  btns.forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+// Fix selectStrat to work for both groups
+document.querySelectorAll('.strat-select[id^="s-"]').forEach(btn => {
+  btn.addEventListener('click', function(){
+    myStrat = this.id.replace('s-','').toUpperCase();
+    document.querySelectorAll('.strat-select[id^="s-"]').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+document.querySelectorAll('.strat-select[id^="o-"]').forEach(btn => {
+  btn.addEventListener('click', function(){
+    oppStrat = this.id.replace('o-','').toUpperCase();
+    document.querySelectorAll('.strat-select[id^="o-"]').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+function runSim() {
+  const N = 10;
+  let myPrev='C', oppPrev='C', myGrimTriggered=false, oppGrimTriggered=false;
+  let myTotal=0, oppTotal=0;
+  let log = `Rounds (C=Cooperate, D=Defect)\n${'─'.repeat(44)}\n`;
+  log += `${'Rnd'.padEnd(5)}${'You'.padEnd(10)}${'Opp'.padEnd(10)}${'Score (You/Opp)'.padEnd(18)}\n`;
+  log += '─'.repeat(44)+'\n';
+
+  for(let i=0;i<N;i++){
+    // Determine my move
+    let myMove = getMove(myStrat, oppPrev, myGrimTriggered, i);
+    let oppMove = getMove(oppStrat, myPrev, oppGrimTriggered, i);
+    if(myStrat==='GT' && oppPrev==='D') myGrimTriggered=true;
+    if(oppStrat==='GT' && myPrev==='D') oppGrimTriggered=true;
+
+    let [sM, sO] = payoff(myMove, oppMove);
+    myTotal+=sM; oppTotal+=sO;
+    log += `${String(i+1).padEnd(5)}${myMove.padEnd(10)}${oppMove.padEnd(10)}${(sM+' / '+sO).padEnd(18)}\n`;
+    myPrev=myMove; oppPrev=oppMove;
+  }
+  log += '─'.repeat(44)+'\n';
+  log += `TOTAL:    You: ${myTotal} yrs   Opponent: ${oppTotal} yrs\n`;
+  log += myTotal < oppTotal ? '→ You did better!' : myTotal > oppTotal ? '→ Opponent did better.' : '→ Tie!';
+  document.getElementById('sim-out').textContent = log;
+}
+function getMove(strat, prevOpp, grimTriggered, round) {
+  if(strat==='AC') return 'C';
+  if(strat==='AD') return 'D';
+  if(strat==='TFT') return round===0 ? 'C' : prevOpp;
+  if(strat==='GT') return (grimTriggered || prevOpp==='D') ? 'D' : 'C';
+  if(strat==='RAND') return Math.random()<0.5?'C':'D';
+  return 'C';
+}
+function payoff(a,b) {
+  if(a==='C'&&b==='C') return [1,1];
+  if(a==='C'&&b==='D') return [5,0];
+  if(a==='D'&&b==='C') return [0,5];
+  return [3,3];
+}
+</script>
+</body>
+</html>
